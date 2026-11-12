@@ -1,4 +1,4 @@
-export type AppRoute = 'tuner' | 'metronome' | 'chords' | 'settings';
+export type AppRoute = 'tuner' | 'metronome' | 'chords' | 'lyrics' | 'settings';
 
 export interface RouteMeta {
   id: AppRoute;
@@ -27,6 +27,12 @@ export const APP_ROUTES: readonly RouteMeta[] = [
     title: 'Chord Library | StringTune',
   },
   {
+    id: 'lyrics',
+    path: '/lyrics',
+    label: 'Lyrics',
+    title: 'Lyrics | StringTune',
+  },
+  {
     id: 'settings',
     path: '/settings',
     label: 'Settings',
@@ -41,6 +47,8 @@ export function parseRouteFromPathname(pathname: string): AppRoute {
       return 'metronome';
     case '/chords':
       return 'chords';
+    case '/lyrics':
+      return 'lyrics';
     case '/settings':
       return 'settings';
     default:

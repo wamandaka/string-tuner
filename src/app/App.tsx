@@ -4,6 +4,7 @@ import { AppShell } from '../components/layout/AppShell';
 import { TunerScreen } from '../features/tuner/components/TunerScreen';
 import { MetronomeScreen } from '../features/metronome/components/MetronomeScreen';
 import { ChordsScreen } from '../features/chords/components/ChordsScreen';
+import { LyricsScreen } from '../features/lyrics/components/LyricsScreen';
 import { SettingsScreen } from '../features/settings/components/SettingsScreen';
 
 function ActiveRouteView() {
@@ -16,6 +17,8 @@ function ActiveRouteView() {
       return <MetronomeScreen />;
     case 'chords':
       return <ChordsScreen />;
+    case 'lyrics':
+      return <LyricsScreen />;
     case 'settings':
       return <SettingsScreen />;
   }

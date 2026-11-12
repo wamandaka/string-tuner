@@ -24,6 +24,12 @@ test.describe('StringTune primary flows', () => {
     ).toBeVisible();
     await expect(page).toHaveTitle(/Chord Library \| StringTune/);
 
+    await nav.getByRole('link', { name: 'Lyrics' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Song Lyrics' }),
+    ).toBeVisible();
+    await expect(page).toHaveTitle(/Lyrics \| StringTune/);
+
     await nav.getByRole('link', { name: 'Settings' }).click();
     await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
     await expect(page).toHaveTitle(/Settings \| StringTune/);
@@ -261,7 +267,7 @@ test.describe('StringTune primary flows', () => {
     await expect(page.locator('#tuner-preset-select')).toHaveValue('drop-d');
 
     await page.setViewportSize({ width: 320, height: 640 });
-    for (const path of ['/', '/metronome', '/chords', '/settings']) {
+    for (const path of ['/', '/metronome', '/chords', '/lyrics', '/settings']) {
       await page.goto(path);
       const hasOverflow = await page.evaluate(
         () =>
@@ -270,6 +276,64 @@ test.describe('StringTune primary flows', () => {
       );
       expect(hasOverflow).toBe(false);
     }
+  });
+
+  test('searches free LRCLIB lyrics API, toggles synced lines, and saves offline across reload', async ({
+    page,
+  }) => {
+    await page.route('https://lrclib.net/api/search**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            id: 4242,
+            trackName: 'Wonderwall',
+            artistName: 'Oasis',
+            albumName: "(What's the Story) Morning Glory?",
+            duration: 258,
+            instrumental: false,
+            plainLyrics:
+              'Today is gonna be the day\nThat they are gonna throw it back to you',
+            syncedLyrics:
+              '[00:14.15] Today is gonna be the day\n[00:20.04] That they are gonna throw it back to you',
+          },
+        ]),
+      });
+    });
+
+    await page.goto('/lyrics');
+    await page.getByLabel('Search song title or artist').fill('Wonderwall');
+    await page.getByRole('button', { name: 'Search Lyrics' }).click();
+
+    await expect(page.getByTestId('lyrics-result-count')).toContainText(
+      '1 track',
+    );
+    await expect(
+      page.getByRole('heading', { name: 'Wonderwall' }),
+    ).toBeVisible();
+    await expect(page.getByTestId('lyrics-reader-body')).toContainText(
+      'Today is gonna be the day',
+    );
+
+    await page.getByRole('button', { name: 'Synced', exact: true }).click();
+    await expect(page.getByTestId('lyrics-reader-body')).toContainText(
+      '[00:14]',
+    );
+
+    await page.getByRole('button', { name: 'Save Offline' }).click();
+    await expect(
+      page.getByRole('button', { name: 'Saved Offline (1)' }),
+    ).toBeVisible();
+
+    await page.reload();
+    await page.getByRole('button', { name: 'Saved Offline (1)' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Wonderwall' }),
+    ).toBeVisible();
+    await expect(page.getByTestId('lyrics-reader-body')).toContainText(
+      'Today is gonna be the day',
+    );
   });
 
   test('exposes valid PWA manifest and registers service worker offline shell', async ({
