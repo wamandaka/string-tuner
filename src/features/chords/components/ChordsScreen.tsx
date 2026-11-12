@@ -75,11 +75,11 @@ export function ChordsScreen() {
         <div>
           <h1
             id="chords-heading"
-            className="text-lg font-semibold tracking-tight text-[var(--st-text)]"
+            className="text-lg font-semibold tracking-tight text-(--st-text)"
           >
             Guitar Chord Library
           </h1>
-          <p className="text-xs text-[var(--st-text-muted)]">
+          <p className="text-xs text-(--st-text-muted)">
             {CHORDS.length} offline voicings · Open &amp; barre diagrams with
             finger positions
           </p>
@@ -88,7 +88,7 @@ export function ChordsScreen() {
         <div
           role="group"
           aria-label="Voicing shape filter"
-          className="inline-flex rounded-xl border border-[var(--st-border)] bg-[var(--st-surface)] p-1"
+          className="inline-flex rounded-xl border border-(--st-border) bg-(--st-surface) p-1"
         >
           {(['all', 'open', 'barre'] as const).map((shape) => (
             <button
@@ -98,8 +98,8 @@ export function ChordsScreen() {
               onClick={() => setShapeFilter(shape)}
               className={`min-h-8 rounded-lg px-2.5 py-1 text-xs font-semibold capitalize transition-colors ${
                 shapeFilter === shape
-                  ? 'bg-[var(--st-accent)] text-[var(--st-accent-text)]'
-                  : 'text-[var(--st-text-muted)] hover:text-[var(--st-text)]'
+                  ? 'bg-(--st-accent) text-(--st-accent-text)'
+                  : 'text-(--st-text-muted) hover:text-(--st-text)'
               }`}
             >
               {shape}
@@ -114,7 +114,7 @@ export function ChordsScreen() {
           Search chords by name
         </label>
         <Search
-          className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[var(--st-text-muted)]"
+          className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-(--st-text-muted)"
           aria-hidden="true"
         />
         <input
@@ -123,14 +123,14 @@ export function ChordsScreen() {
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
           placeholder="Search chords (e.g. Am, Fmaj7, Gsus4, Barre)..."
-          className="min-h-11 w-full rounded-xl border border-[var(--st-border)] bg-[var(--st-surface)] py-2.5 pr-10 pl-10 text-sm text-[var(--st-text)] placeholder:text-[var(--st-text-muted)]"
+          className="min-h-11 w-full rounded-xl border border-(--st-border) bg-(--st-surface) py-2.5 pr-10 pl-10 text-sm text-(--st-text) placeholder:text-(--st-text-muted)"
         />
         {searchQuery ? (
           <button
             type="button"
             aria-label="Clear chord search"
             onClick={() => setSearchQuery('')}
-            className="absolute top-1/2 right-2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--st-text-muted)] hover:text-[var(--st-text)]"
+            className="absolute top-1/2 right-2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-(--st-text-muted) hover:text-(--st-text)"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -149,8 +149,8 @@ export function ChordsScreen() {
           onClick={() => setSelectedCategory('all')}
           className={`min-h-9 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
             selectedCategory === 'all'
-              ? 'border-[var(--st-accent)] bg-[var(--st-accent-soft)] text-[var(--st-accent)]'
-              : 'border-[var(--st-border)] bg-[var(--st-surface)] text-[var(--st-text-muted)] hover:border-[var(--st-border-strong)] hover:text-[var(--st-text)]'
+              ? 'border-(--st-accent) bg-(--st-accent-soft) text-(--st-accent)'
+              : 'border-(--st-border) bg-(--st-surface) text-(--st-text-muted) hover:border-(--st-border-strong) hover:text-(--st-text)'
           }`}
         >
           All
@@ -162,8 +162,8 @@ export function ChordsScreen() {
           onClick={() => setSelectedCategory('favorites')}
           className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
             selectedCategory === 'favorites'
-              ? 'border-[var(--st-accent)] bg-[var(--st-accent-soft)] text-[var(--st-accent)]'
-              : 'border-[var(--st-border)] bg-[var(--st-surface)] text-[var(--st-text-muted)] hover:border-[var(--st-border-strong)] hover:text-[var(--st-text)]'
+              ? 'border-(--st-accent) bg-(--st-accent-soft) text-(--st-accent)'
+              : 'border-(--st-border) bg-(--st-surface) text-(--st-text-muted) hover:border-(--st-border-strong) hover:text-(--st-text)'
           }`}
         >
           <Star
@@ -184,8 +184,8 @@ export function ChordsScreen() {
               onClick={() => setSelectedCategory(category)}
               className={`min-h-9 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
                 active
-                  ? 'border-[var(--st-accent)] bg-[var(--st-accent-soft)] text-[var(--st-accent)]'
-                  : 'border-[var(--st-border)] bg-[var(--st-surface)] text-[var(--st-text-muted)] hover:border-[var(--st-border-strong)] hover:text-[var(--st-text)]'
+                  ? 'border-(--st-accent) bg-(--st-accent-soft) text-(--st-accent)'
+                  : 'border-(--st-border) bg-(--st-surface) text-(--st-text-muted) hover:border-(--st-border-strong) hover:text-(--st-text)'
               }`}
             >
               {CHORD_CATEGORY_LABELS[category]}
@@ -195,7 +195,7 @@ export function ChordsScreen() {
       </div>
 
       {/* Results Count */}
-      <div className="flex items-center justify-between text-xs text-[var(--st-text-muted)]">
+      <div className="flex items-center justify-between text-xs text-(--st-text-muted)">
         <span data-testid="chord-count">
           Showing {filteredChords.length}{' '}
           {filteredChords.length === 1 ? 'chord' : 'chords'}
@@ -204,13 +204,13 @@ export function ChordsScreen() {
 
       {/* Chord Cards Grid */}
       {filteredChords.length === 0 ? (
-        <div className="rounded-2xl border border-[var(--st-border)] bg-[var(--st-surface)] p-8 text-center">
-          <p className="text-sm font-medium text-[var(--st-text)]">
+        <div className="rounded-2xl border border-(--st-border) bg-(--st-surface) p-8 text-center">
+          <p className="text-sm font-medium text-(--st-text)">
             {selectedCategory === 'favorites' && favoriteChordIds.length === 0
               ? 'No favorite chords saved yet.'
               : 'No matching chords found.'}
           </p>
-          <p className="mt-1 text-xs text-[var(--st-text-muted)]">
+          <p className="mt-1 text-xs text-(--st-text-muted)">
             {selectedCategory === 'favorites' && favoriteChordIds.length === 0
               ? 'Tap the star icon on any chord card to save it for quick practice.'
               : 'Try clearing your search query or switching chord filters.'}

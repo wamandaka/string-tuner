@@ -283,7 +283,7 @@ export function ChordDiagram({ chord, compact = false }: ChordDiagramProps) {
         })}
       </svg>
 
-      <div className="min-h-5 text-center text-[11px] font-medium text-[var(--st-text-muted)]">
+      <div className="min-h-5 text-center text-[11px] font-medium text-(--st-text-muted)">
         {selectedHint ?? 'Tap a dot or marker to inspect string fingering'}
       </div>
     </div>

@@ -21,9 +21,9 @@ export function StringSelector({
   const isAuto = manualStringNumber === null;
 
   return (
-    <div className="rounded-2xl border border-[var(--st-border)] bg-[var(--st-surface-elevated)] p-3">
+    <div className="rounded-2xl border border-(--st-border) bg-(--st-surface-elevated) p-3">
       <div className="mb-2.5 flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold tracking-wider text-[var(--st-text-muted)] uppercase">
+        <span className="text-xs font-semibold tracking-wider text-(--st-text-muted) uppercase">
           {isAuto ? 'Auto String Detection' : `Locked to String ${manualStringNumber}`}
         </span>
         <button
@@ -33,8 +33,8 @@ export function StringSelector({
           aria-pressed={isAuto}
           className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${
             isAuto
-              ? 'border-[color-mix(in_srgb,var(--st-accent)_40%,transparent)] bg-[var(--st-accent-soft)] text-[var(--st-accent)]'
-              : 'border-[var(--st-border)] bg-[var(--st-surface)] text-[var(--st-text-muted)] hover:text-[var(--st-text)]'
+              ? 'border-(--st-accent)/40 bg-(--st-accent-soft) text-(--st-accent)'
+              : 'border-(--st-border) bg-(--st-surface) text-(--st-text-muted) hover:text-(--st-text)'
           }`}
         >
           <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
@@ -65,8 +65,8 @@ export function StringSelector({
               onClick={() => onSelectString(item.stringNumber)}
               className={`relative flex min-h-14 flex-col items-center justify-center rounded-xl border px-1 py-1.5 transition-colors ${
                 active
-                  ? 'border-[var(--st-accent)] bg-[var(--st-accent-soft)] text-[var(--st-accent)]'
-                  : 'border-[var(--st-border)] bg-[var(--st-surface)] text-[var(--st-text)] hover:border-[var(--st-border-strong)]'
+                  ? 'border-(--st-accent) bg-(--st-accent-soft) text-(--st-accent)'
+                  : 'border-(--st-border) bg-(--st-surface) text-(--st-text) hover:border-(--st-border-strong)'
               }`}
             >
               {isManualSelected ? (
@@ -75,7 +75,7 @@ export function StringSelector({
                   aria-hidden="true"
                 />
               ) : null}
-              <span className="text-[10px] font-medium text-[var(--st-text-muted)]">
+              <span className="text-[10px] font-medium text-(--st-text-muted)">
                 {item.stringNumber}
               </span>
               <span className="text-sm font-bold leading-tight">

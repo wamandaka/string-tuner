@@ -111,11 +111,11 @@ export function TunerScreen() {
         <div>
           <h1
             id="tuner-heading"
-            className="text-lg font-semibold tracking-tight text-[var(--st-text)]"
+            className="text-lg font-semibold tracking-tight text-(--st-text)"
           >
             {mode === 'chromatic' ? 'Chromatic Tuner' : 'Guitar Tuner'}
           </h1>
-          <p className="text-xs text-[var(--st-text-muted)]">
+          <p className="text-xs text-(--st-text-muted)">
             {mode === 'chromatic'
               ? 'All 12 notes · A4 = 440 Hz'
               : `${activePreset.name} · ${activePreset.description}`}
@@ -135,7 +135,7 @@ export function TunerScreen() {
         <div
           role="group"
           aria-label="Tuner mode"
-          className="inline-flex rounded-xl border border-[var(--st-border)] bg-[var(--st-surface)] p-1"
+          className="inline-flex rounded-xl border border-(--st-border) bg-(--st-surface) p-1"
         >
           <button
             type="button"
@@ -143,8 +143,8 @@ export function TunerScreen() {
             onClick={() => changeMode('guitar')}
             className={`min-h-9 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
               mode === 'guitar'
-                ? 'bg-[var(--st-accent)] text-[var(--st-accent-text)]'
-                : 'text-[var(--st-text-muted)] hover:text-[var(--st-text)]'
+                ? 'bg-(--st-accent) text-(--st-accent-text)'
+                : 'text-(--st-text-muted) hover:text-(--st-text)'
             }`}
           >
             Guitar
@@ -155,8 +155,8 @@ export function TunerScreen() {
             onClick={() => changeMode('chromatic')}
             className={`min-h-9 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
               mode === 'chromatic'
-                ? 'bg-[var(--st-accent)] text-[var(--st-accent-text)]'
-                : 'text-[var(--st-text-muted)] hover:text-[var(--st-text)]'
+                ? 'bg-(--st-accent) text-(--st-accent-text)'
+                : 'text-(--st-text-muted) hover:text-(--st-text)'
             }`}
           >
             Chromatic
@@ -169,7 +169,7 @@ export function TunerScreen() {
               Tuning preset
             </label>
             <SlidersHorizontal
-              className="h-4 w-4 text-[var(--st-text-muted)]"
+              className="h-4 w-4 text-(--st-text-muted)"
               aria-hidden="true"
             />
             <select
@@ -178,7 +178,7 @@ export function TunerScreen() {
               onChange={(event) =>
                 changeTuning(event.target.value as TuningPresetId)
               }
-              className="min-h-10 rounded-xl border border-[var(--st-border)] bg-[var(--st-surface)] px-3 py-1.5 text-xs font-medium text-[var(--st-text)]"
+              className="min-h-10 rounded-xl border border-(--st-border) bg-(--st-surface) px-3 py-1.5 text-xs font-medium text-(--st-text)"
             >
               {TUNING_PRESETS.map((preset) => (
                 <option key={preset.id} value={preset.id}>
@@ -200,12 +200,12 @@ export function TunerScreen() {
           <div className="flex items-baseline justify-center gap-1">
             <span
               data-testid="tuner-note"
-              className="font-mono text-5xl font-bold tracking-tight text-[var(--st-text)] sm:text-6xl"
+              className="font-mono text-5xl font-bold tracking-tight text-(--st-text) sm:text-6xl"
             >
               {reading ? reading.note : '--'}
             </span>
             {reading ? (
-              <span className="font-mono text-xl font-semibold text-[var(--st-text-muted)]">
+              <span className="font-mono text-xl font-semibold text-(--st-text-muted)">
                 {reading.octave}
               </span>
             ) : null}
@@ -214,23 +214,23 @@ export function TunerScreen() {
           <div className="mt-1.5 flex items-center gap-3 text-sm">
             <span
               data-testid="tuner-frequency"
-              className="font-mono font-medium text-[var(--st-text)]"
+              className="font-mono font-medium text-(--st-text)"
             >
               {reading ? `${reading.frequency.toFixed(2)} Hz` : '0.00 Hz'}
             </span>
-            <span aria-hidden="true" className="text-[var(--st-text-muted)]">
+            <span aria-hidden="true" className="text-(--st-text-muted)">
               ·
             </span>
             <span
               data-testid="tuner-cents"
               className={`font-mono font-semibold ${
                 reading?.status === 'in-tune'
-                  ? 'text-[var(--st-accent)]'
+                  ? 'text-(--st-accent)'
                   : reading?.status === 'flat'
-                    ? 'text-[var(--st-warn)]'
+                    ? 'text-(--st-warn)'
                     : reading?.status === 'sharp'
-                      ? 'text-[var(--st-danger)]'
-                      : 'text-[var(--st-text-muted)]'
+                      ? 'text-(--st-danger)'
+                      : 'text-(--st-text-muted)'
               }`}
             >
               {formattedCents}
@@ -252,8 +252,8 @@ export function TunerScreen() {
           data-testid="tuner-status-hint"
           className={`mt-2 text-center text-sm font-medium ${
             reading?.status === 'in-tune' && runState === 'active'
-              ? 'text-[var(--st-accent)]'
-              : 'text-[var(--st-text-muted)]'
+              ? 'text-(--st-accent)'
+              : 'text-(--st-text-muted)'
           }`}
         >
           {statusMeta.hint}
@@ -267,8 +267,8 @@ export function TunerScreen() {
             disabled={runState === 'starting'}
             className={`inline-flex min-h-12 w-full max-w-xs items-center justify-center gap-2.5 rounded-xl px-5 py-3 text-sm font-semibold transition-colors ${
               isRunning
-                ? 'border border-[var(--st-border-strong)] bg-[var(--st-surface-elevated)] text-[var(--st-text)] hover:bg-[var(--st-surface-subtle)]'
-                : 'bg-[var(--st-accent)] text-[var(--st-accent-text)] hover:opacity-95'
+                ? 'border border-(--st-border-strong) bg-(--st-surface-elevated) text-(--st-text) hover:bg-(--st-surface-subtle)'
+                : 'bg-(--st-accent) text-(--st-accent-text) hover:opacity-95'
             }`}
           >
             {isRunning ? (
@@ -286,7 +286,7 @@ export function TunerScreen() {
             )}
           </button>
 
-          <span className="text-xs text-[var(--st-text-muted)]">
+          <span className="text-xs text-(--st-text-muted)">
             Microphone: {runState === 'active' ? 'active' : permissionState}
           </span>
         </div>
@@ -296,23 +296,23 @@ export function TunerScreen() {
       {error ? (
         <div
           role="alert"
-          className="flex items-start gap-3 rounded-2xl border border-[color-mix(in_srgb,var(--st-danger)_40%,transparent)] bg-[color-mix(in_srgb,var(--st-danger)_10%,transparent)] p-4 text-sm"
+          className="flex items-start gap-3 rounded-2xl border border-(--st-danger)/40 bg-(--st-danger)/10 p-4 text-sm"
         >
           <AlertCircle
-            className="mt-0.5 h-5 w-5 shrink-0 text-[var(--st-danger)]"
+            className="mt-0.5 h-5 w-5 shrink-0 text-(--st-danger)"
             aria-hidden="true"
           />
           <div className="min-w-0 flex-1">
-            <h2 className="font-semibold text-[var(--st-text)]">
+            <h2 className="font-semibold text-(--st-text)">
               {error.title}
             </h2>
-            <p className="mt-0.5 text-xs text-[var(--st-text-muted)]">
+            <p className="mt-0.5 text-xs text-(--st-text-muted)">
               {error.message}
             </p>
             <button
               type="button"
               onClick={() => void start()}
-              className="mt-2.5 inline-flex min-h-9 items-center rounded-lg border border-[var(--st-border-strong)] bg-[var(--st-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--st-text)] hover:bg-[var(--st-surface-elevated)]"
+              className="mt-2.5 inline-flex min-h-9 items-center rounded-lg border border-(--st-border-strong) bg-(--st-surface) px-3 py-1.5 text-xs font-semibold text-(--st-text) hover:bg-(--st-surface-elevated)"
             >
               Retry Microphone
             </button>

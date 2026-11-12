@@ -10,12 +10,12 @@ interface BadgeProps {
 
 const TONE_CLASSES: Record<BadgeTone, string> = {
   neutral:
-    'border-[var(--st-border)] bg-[var(--st-surface-elevated)] text-[var(--st-text-muted)]',
+    'border-(--st-border) bg-(--st-surface-elevated) text-(--st-text-muted)',
   accent:
-    'border-[color-mix(in_srgb,var(--st-accent)_35%,transparent)] bg-[var(--st-accent-soft)] text-[var(--st-accent)]',
-  warn: 'border-[color-mix(in_srgb,var(--st-warn)_35%,transparent)] bg-[color-mix(in_srgb,var(--st-warn)_14%,transparent)] text-[var(--st-warn)]',
+    'border-(--st-accent)/35 bg-(--st-accent-soft) text-(--st-accent)',
+  warn: 'border-(--st-warn)/35 bg-(--st-warn)/14 text-(--st-warn)',
   danger:
-    'border-[color-mix(in_srgb,var(--st-danger)_35%,transparent)] bg-[color-mix(in_srgb,var(--st-danger)_14%,transparent)] text-[var(--st-danger)]',
+    'border-(--st-danger)/35 bg-(--st-danger)/14 text-(--st-danger)',
 };
 
 export function Badge({

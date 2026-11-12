@@ -164,11 +164,11 @@ export function LyricsScreen() {
         <div>
           <h1
             id="lyrics-heading"
-            className="text-lg font-semibold tracking-tight text-[var(--st-text)]"
+            className="text-lg font-semibold tracking-tight text-(--st-text)"
           >
             Song Lyrics
           </h1>
-          <p className="text-xs text-[var(--st-text-muted)]">
+          <p className="text-xs text-(--st-text-muted)">
             Free LRCLIB lyrics lookup · Save favorites locally for offline
             practice
           </p>
@@ -177,7 +177,7 @@ export function LyricsScreen() {
         <div
           role="group"
           aria-label="Lyrics source view"
-          className="inline-flex rounded-xl border border-[var(--st-border)] bg-[var(--st-surface)] p-1"
+          className="inline-flex rounded-xl border border-(--st-border) bg-(--st-surface) p-1"
         >
           <button
             type="button"
@@ -185,8 +185,8 @@ export function LyricsScreen() {
             onClick={() => switchTab('search')}
             className={`min-h-8 rounded-lg px-3 py-1 text-xs font-semibold transition-colors ${
               activeTab === 'search'
-                ? 'bg-[var(--st-accent)] text-[var(--st-accent-text)]'
-                : 'text-[var(--st-text-muted)] hover:text-[var(--st-text)]'
+                ? 'bg-(--st-accent) text-(--st-accent-text)'
+                : 'text-(--st-text-muted) hover:text-(--st-text)'
             }`}
           >
             Search ({results.length})
@@ -197,8 +197,8 @@ export function LyricsScreen() {
             onClick={() => switchTab('saved')}
             className={`min-h-8 rounded-lg px-3 py-1 text-xs font-semibold transition-colors ${
               activeTab === 'saved'
-                ? 'bg-[var(--st-accent)] text-[var(--st-accent-text)]'
-                : 'text-[var(--st-text-muted)] hover:text-[var(--st-text)]'
+                ? 'bg-(--st-accent) text-(--st-accent-text)'
+                : 'text-(--st-text-muted) hover:text-(--st-text)'
             }`}
           >
             Saved Offline ({savedTracks.length})
@@ -219,7 +219,7 @@ export function LyricsScreen() {
             Search song title or artist
           </label>
           <Search
-            className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[var(--st-text-muted)]"
+            className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-(--st-text-muted)"
             aria-hidden="true"
           />
           <input
@@ -228,14 +228,14 @@ export function LyricsScreen() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search song title or artist (e.g. Wonderwall, Hotel California)..."
-            className="min-h-11 w-full rounded-xl border border-[var(--st-border)] bg-[var(--st-surface)] py-2.5 pr-10 pl-10 text-sm text-[var(--st-text)] placeholder:text-[var(--st-text-muted)]"
+            className="min-h-11 w-full rounded-xl border border-(--st-border) bg-(--st-surface) py-2.5 pr-10 pl-10 text-sm text-(--st-text) placeholder:text-(--st-text-muted)"
           />
           {query ? (
             <button
               type="button"
               onClick={clearSearch}
               aria-label="Clear lyrics search"
-              className="absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--st-text-muted)] hover:bg-[var(--st-surface-elevated)] hover:text-[var(--st-text)]"
+              className="absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-(--st-text-muted) hover:bg-(--st-surface-elevated) hover:text-(--st-text)"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -245,7 +245,7 @@ export function LyricsScreen() {
         <button
           type="submit"
           disabled={isLoading}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--st-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--st-accent-text)] transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-(--st-accent) px-5 py-2.5 text-sm font-semibold text-(--st-accent-text) transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {isLoading ? (
             <>
@@ -263,7 +263,7 @@ export function LyricsScreen() {
 
       {/* Quick song suggestions */}
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-xs font-medium text-[var(--st-text-muted)]">
+        <span className="text-xs font-medium text-(--st-text-muted)">
           Try:
         </span>
         {QUICK_SEARCH_PRESETS.map((preset) => (
@@ -271,7 +271,7 @@ export function LyricsScreen() {
             key={preset}
             type="button"
             onClick={() => void runSearch(preset)}
-            className="min-h-8 rounded-full border border-[var(--st-border)] bg-[var(--st-surface)] px-3 py-1 text-xs font-medium text-[var(--st-text-muted)] transition-colors hover:border-[var(--st-accent)] hover:text-[var(--st-text)]"
+            className="min-h-8 rounded-full border border-(--st-border) bg-(--st-surface) px-3 py-1 text-xs font-medium text-(--st-text-muted) transition-colors hover:border-(--st-accent) hover:text-(--st-text)"
           >
             {preset}
           </button>
@@ -281,11 +281,11 @@ export function LyricsScreen() {
       {!isOnline ? (
         <div
           role="status"
-          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[color-mix(in_srgb,var(--st-warn)_40%,transparent)] bg-[color-mix(in_srgb,var(--st-warn)_10%,transparent)] px-3.5 py-2.5 text-xs text-[var(--st-text)]"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-(--st-warn)/40 bg-(--st-warn)/10 px-3.5 py-2.5 text-xs text-(--st-text)"
         >
           <span className="inline-flex items-center gap-2">
             <WifiOff
-              className="h-4 w-4 shrink-0 text-[var(--st-warn)]"
+              className="h-4 w-4 shrink-0 text-(--st-warn)"
               aria-hidden="true"
             />
             <span>
@@ -297,7 +297,7 @@ export function LyricsScreen() {
             <button
               type="button"
               onClick={() => switchTab('saved')}
-              className="font-semibold text-[var(--st-accent)] underline underline-offset-2"
+              className="font-semibold text-(--st-accent) underline underline-offset-2"
             >
               Open Saved ({savedTracks.length})
             </button>
@@ -308,14 +308,14 @@ export function LyricsScreen() {
       {error ? (
         <div
           role="alert"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[color-mix(in_srgb,var(--st-danger)_40%,transparent)] bg-[color-mix(in_srgb,var(--st-danger)_10%,transparent)] px-4 py-3 text-sm text-[var(--st-text)]"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--st-danger)/40 bg-(--st-danger)/10 px-4 py-3 text-sm text-(--st-text)"
         >
           <span>{error}</span>
           {lastSearchedQuery ? (
             <button
               type="button"
               onClick={retrySearch}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-[var(--st-border-strong)] bg-[var(--st-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--st-text)] hover:bg-[var(--st-surface-elevated)]"
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-(--st-border-strong) bg-(--st-surface) px-3 py-1.5 text-xs font-semibold text-(--st-text) hover:bg-(--st-surface-elevated)"
             >
               <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Retry</span>
@@ -328,7 +328,7 @@ export function LyricsScreen() {
         {/* Track list column */}
         <Card className="flex flex-col gap-2 p-3">
           <div className="flex items-center justify-between px-1 py-0.5">
-            <h2 className="text-xs font-semibold tracking-wider text-[var(--st-text-muted)] uppercase">
+            <h2 className="text-xs font-semibold tracking-wider text-(--st-text-muted) uppercase">
               {activeTab === 'saved'
                 ? 'Saved Songs'
                 : hasSearched
@@ -337,7 +337,7 @@ export function LyricsScreen() {
             </h2>
             <span
               data-testid="lyrics-result-count"
-              className="text-xs text-[var(--st-text-muted)]"
+              className="text-xs text-(--st-text-muted)"
             >
               {visibleTracks.length}{' '}
               {visibleTracks.length === 1 ? 'track' : 'tracks'}
@@ -345,15 +345,15 @@ export function LyricsScreen() {
           </div>
 
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-10 text-sm text-[var(--st-text-muted)]">
+            <div className="flex flex-col items-center justify-center gap-2 py-10 text-sm text-(--st-text-muted)">
               <Loader2
-                className="h-5 w-5 animate-spin text-[var(--st-accent)]"
+                className="h-5 w-5 animate-spin text-(--st-accent)"
                 aria-hidden="true"
               />
               <span>Fetching tracks from LRCLIB...</span>
             </div>
           ) : visibleTracks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 px-3 py-10 text-center text-sm text-[var(--st-text-muted)]">
+            <div className="flex flex-col items-center justify-center gap-2 px-3 py-10 text-center text-sm text-(--st-text-muted)">
               <Music2 className="h-6 w-6 opacity-60" aria-hidden="true" />
               {activeTab === 'saved' ? (
                 <p>
@@ -375,7 +375,7 @@ export function LyricsScreen() {
           ) : (
             <ul
               aria-label="Lyrics track list"
-              className="flex max-h-[26rem] flex-col gap-1.5 overflow-y-auto pr-0.5"
+              className="flex max-h-104 flex-col gap-1.5 overflow-y-auto pr-0.5"
             >
               {visibleTracks.map((track) => {
                 const isSelected = selectedTrack?.id === track.id;
@@ -388,19 +388,19 @@ export function LyricsScreen() {
                       onClick={() => setSelectedTrack(track)}
                       className={`flex w-full flex-col gap-1 rounded-xl border p-3 text-left transition-colors ${
                         isSelected
-                          ? 'border-[var(--st-accent)] bg-[var(--st-accent-soft)]'
-                          : 'border-[var(--st-border)] bg-[var(--st-surface-elevated)] hover:border-[var(--st-border-strong)]'
+                          ? 'border-(--st-accent) bg-(--st-accent-soft)'
+                          : 'border-(--st-border) bg-(--st-surface-elevated) hover:border-(--st-border-strong)'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="min-w-0 flex-1 font-semibold break-words text-[var(--st-text)]">
+                        <span className="min-w-0 flex-1 font-semibold wrap-break-word text-(--st-text)">
                           {track.trackName}
                         </span>
-                        <span className="shrink-0 font-mono text-xs text-[var(--st-text-muted)]">
+                        <span className="shrink-0 font-mono text-xs text-(--st-text-muted)">
                           {formatTrackDuration(track.durationSeconds)}
                         </span>
                       </div>
-                      <span className="text-xs break-words text-[var(--st-text-muted)]">
+                      <span className="text-xs wrap-break-word text-(--st-text-muted)">
                         {track.artistName}
                       </span>
                       <div className="flex flex-wrap items-center gap-1 pt-0.5">
@@ -421,15 +421,15 @@ export function LyricsScreen() {
         </Card>
 
         {/* Lyrics detail column */}
-        <Card className="flex min-h-[22rem] flex-col gap-4 p-4 sm:p-5">
+        <Card className="flex min-h-88 flex-col gap-4 p-4 sm:p-5">
           {selectedTrack ? (
             <>
-              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--st-border)] pb-3">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-(--st-border) pb-3">
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-xl font-bold tracking-tight break-words text-[var(--st-text)]">
+                  <h2 className="text-xl font-bold tracking-tight wrap-break-word text-(--st-text)">
                     {selectedTrack.trackName}
                   </h2>
-                  <p className="mt-0.5 text-sm break-words text-[var(--st-text-muted)]">
+                  <p className="mt-0.5 text-sm wrap-break-word text-(--st-text-muted)">
                     {selectedTrack.artistName}
                     {selectedTrack.albumName
                       ? ` · ${selectedTrack.albumName}`
@@ -444,8 +444,8 @@ export function LyricsScreen() {
                     onClick={() => toggleSaveTrack(selectedTrack)}
                     className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
                       isTrackSaved(selectedTrack.id)
-                        ? 'border-[var(--st-accent)] bg-[var(--st-accent-soft)] text-[var(--st-accent)]'
-                        : 'border-[var(--st-border)] bg-[var(--st-surface-elevated)] text-[var(--st-text)] hover:border-[var(--st-border-strong)]'
+                        ? 'border-(--st-accent) bg-(--st-accent-soft) text-(--st-accent)'
+                        : 'border-(--st-border) bg-(--st-surface-elevated) text-(--st-text) hover:border-(--st-border-strong)'
                     }`}
                   >
                     <Bookmark
@@ -464,12 +464,12 @@ export function LyricsScreen() {
                     <button
                       type="button"
                       onClick={() => void handleCopyLyrics(selectedTrack)}
-                      className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-[var(--st-border)] bg-[var(--st-surface-elevated)] px-3 py-1.5 text-xs font-semibold text-[var(--st-text)] transition-colors hover:border-[var(--st-border-strong)]"
+                      className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-(--st-border) bg-(--st-surface-elevated) px-3 py-1.5 text-xs font-semibold text-(--st-text) transition-colors hover:border-(--st-border-strong)"
                     >
                       {copiedTrackId === selectedTrack.id ? (
                         <>
                           <Check
-                            className="h-3.5 w-3.5 text-[var(--st-accent)]"
+                            className="h-3.5 w-3.5 text-(--st-accent)"
                             aria-hidden="true"
                           />
                           <span>Copied</span>
@@ -492,7 +492,7 @@ export function LyricsScreen() {
                     <div
                       role="group"
                       aria-label="Lyrics display format"
-                      className="inline-flex rounded-xl border border-[var(--st-border)] bg-[var(--st-surface-elevated)] p-0.5"
+                      className="inline-flex rounded-xl border border-(--st-border) bg-(--st-surface-elevated) p-0.5"
                     >
                       {(['plain', 'synced'] as const).map((mode) => (
                         <button
@@ -502,8 +502,8 @@ export function LyricsScreen() {
                           onClick={() => setDisplayMode(mode)}
                           className={`min-h-8 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
                             displayMode === mode
-                              ? 'bg-[var(--st-accent)] text-[var(--st-accent-text)]'
-                              : 'text-[var(--st-text-muted)] hover:text-[var(--st-text)]'
+                              ? 'bg-(--st-accent) text-(--st-accent-text)'
+                              : 'text-(--st-text-muted) hover:text-(--st-text)'
                           }`}
                         >
                           {mode === 'plain' ? 'Plain' : 'Synced'}
@@ -515,7 +515,7 @@ export function LyricsScreen() {
                   <div
                     role="group"
                     aria-label="Lyrics text size"
-                    className="inline-flex rounded-xl border border-[var(--st-border)] bg-[var(--st-surface-elevated)] p-0.5"
+                    className="inline-flex rounded-xl border border-(--st-border) bg-(--st-surface-elevated) p-0.5"
                   >
                     {(
                       [
@@ -532,8 +532,8 @@ export function LyricsScreen() {
                         onClick={() => setTextScale(size.id)}
                         className={`min-h-8 min-w-8 rounded-lg px-2 py-1 text-xs font-semibold transition-colors ${
                           textScale === size.id
-                            ? 'bg-[var(--st-accent)] text-[var(--st-accent-text)]'
-                            : 'text-[var(--st-text-muted)] hover:text-[var(--st-text)]'
+                            ? 'bg-(--st-accent) text-(--st-accent-text)'
+                            : 'text-(--st-text-muted) hover:text-(--st-text)'
                         }`}
                       >
                         {size.label}
@@ -549,8 +549,8 @@ export function LyricsScreen() {
                     onClick={() => setAutoScroll((prev) => !prev)}
                     className={`inline-flex min-h-8 items-center gap-1.5 rounded-xl border px-3 py-1 text-xs font-semibold transition-colors ${
                       autoScroll
-                        ? 'border-[var(--st-accent)] bg-[var(--st-accent-soft)] text-[var(--st-accent)]'
-                        : 'border-[var(--st-border)] bg-[var(--st-surface-elevated)] text-[var(--st-text-muted)] hover:text-[var(--st-text)]'
+                        ? 'border-(--st-accent) bg-(--st-accent-soft) text-(--st-accent)'
+                        : 'border-(--st-border) bg-(--st-surface-elevated) text-(--st-text-muted) hover:text-(--st-text)'
                     }`}
                   >
                     {autoScroll ? (
@@ -572,10 +572,10 @@ export function LyricsScreen() {
               <div
                 ref={lyricsScrollRef}
                 data-testid="lyrics-reader-body"
-                className="max-h-[28rem] flex-1 overflow-y-auto rounded-xl border border-[var(--st-border)] bg-[var(--st-surface-elevated)] p-4"
+                className="max-h-112 flex-1 overflow-y-auto rounded-xl border border-(--st-border) bg-(--st-surface-elevated) p-4"
               >
                 {selectedTrack.instrumental && !plainLyricsText ? (
-                  <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-sm text-[var(--st-text-muted)]">
+                  <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-sm text-(--st-text-muted)">
                     <Disc3 className="h-7 w-7 opacity-70" aria-hidden="true" />
                     <p>This track is marked as instrumental.</p>
                   </div>
@@ -583,10 +583,10 @@ export function LyricsScreen() {
                   <ol className={`flex flex-col gap-2 ${TEXT_SCALE_CLASSES[textScale]}`}>
                     {parsedSyncedLines.map((line) => (
                       <li key={line.id} className="flex items-baseline gap-3">
-                        <span className="shrink-0 font-mono text-xs text-[var(--st-accent)]">
+                        <span className="shrink-0 font-mono text-xs text-(--st-accent)">
                           [{line.formattedTime}]
                         </span>
-                        <span className="min-w-0 break-words text-[var(--st-text)]">
+                        <span className="min-w-0 wrap-break-word text-(--st-text)">
                           {line.text}
                         </span>
                       </li>
@@ -594,24 +594,24 @@ export function LyricsScreen() {
                   </ol>
                 ) : plainLyricsText ? (
                   <div
-                    className={`whitespace-pre-wrap break-words text-[var(--st-text)] ${TEXT_SCALE_CLASSES[textScale]}`}
+                    className={`whitespace-pre-wrap wrap-break-word text-(--st-text) ${TEXT_SCALE_CLASSES[textScale]}`}
                   >
                     {plainLyricsText}
                   </div>
                 ) : (
-                  <div className="py-10 text-center text-sm text-[var(--st-text-muted)]">
+                  <div className="py-10 text-center text-sm text-(--st-text-muted)">
                     No lyrics text is attached to this entry. Try selecting another
                     matching version from the list.
                   </div>
                 )}
               </div>
 
-              <p className="text-right text-[11px] text-[var(--st-text-muted)]">
+              <p className="text-right text-[11px] text-(--st-text-muted)">
                 Source: Public LRCLIB API (no API key required)
               </p>
             </>
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center text-sm text-[var(--st-text-muted)]">
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center text-sm text-(--st-text-muted)">
               <Music2 className="h-8 w-8 opacity-60" aria-hidden="true" />
               <p className="max-w-sm">
                 Select a track from search results or your saved library to read

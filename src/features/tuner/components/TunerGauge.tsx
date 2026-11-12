@@ -142,15 +142,15 @@ export function TunerGauge({
 
       {/* Subtle Signal Input Meter */}
       <div className="mx-auto mt-1 flex max-w-[200px] items-center gap-2">
-        <span className="text-[10px] font-medium tracking-wider text-[var(--st-text-muted)] uppercase">
+        <span className="text-[10px] font-medium tracking-wider text-(--st-text-muted) uppercase">
           Input
         </span>
         <div
-          className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--st-surface-subtle)]"
+          className="h-1.5 flex-1 overflow-hidden rounded-full bg-(--st-surface-subtle)"
           aria-hidden="true"
         >
           <div
-            className="h-full rounded-full bg-[var(--st-accent)] transition-[width] duration-75"
+            className="h-full rounded-full bg-(--st-accent) transition-[width] duration-75"
             style={{
               width: `${Math.round(
                 runState === 'active' ? Math.max(4, inputLevel * 100) : 0,

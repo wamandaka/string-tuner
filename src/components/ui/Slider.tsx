@@ -38,13 +38,13 @@ export function Slider({
         htmlFor={inputId}
         className={
           showLabel
-            ? 'mb-1 flex items-center justify-between text-xs font-medium text-[var(--st-text-muted)]'
+            ? 'mb-1 flex items-center justify-between text-xs font-medium text-(--st-text-muted)'
             : 'visually-hidden'
         }
       >
         <span>{label}</span>
         {valueText ? (
-          <span className="font-mono text-[var(--st-text)]">{valueText}</span>
+          <span className="font-mono text-(--st-text)">{valueText}</span>
         ) : null}
       </label>
       <input

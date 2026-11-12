@@ -26,14 +26,14 @@ export function Switch({
       <div className="min-w-0">
         <label
           htmlFor={inputId}
-          className="block cursor-pointer text-sm font-medium text-[var(--st-text)]"
+          className="block cursor-pointer text-sm font-medium text-(--st-text)"
         >
           {label}
         </label>
         {description ? (
           <p
             id={descId}
-            className="mt-0.5 text-xs text-[var(--st-text-muted)]"
+            className="mt-0.5 text-xs text-(--st-text-muted)"
           >
             {description}
           </p>
