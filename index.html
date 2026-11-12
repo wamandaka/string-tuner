@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      try {
+        var storedTheme = localStorage.getItem('stringtune:theme');
+        var schemeMeta = document.querySelector('meta[name="color-scheme"]');
+        if (schemeMeta) {
+          if (storedTheme === 'light' || storedTheme === 'dark') {
+            schemeMeta.setAttribute('content', storedTheme);
+          } else if (storedTheme === 'system') {
+            schemeMeta.setAttribute('content', 'light dark');
+          } else {
+            schemeMeta.setAttribute('content', 'dark');
+          }
+        }
+      } catch (e) {}
+    </script>
+    <meta
+      name="description"
+      content="StringTune — Real-time browser guitar tuner, precision Web Audio metronome, and interactive chord reference library."
+    />
+    <meta name="theme-color" content="#090b0e" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <title>StringTune — Guitar Tuner</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

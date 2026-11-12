@@ -14,15 +14,15 @@ export function AppShell({ children }: AppShellProps) {
   const { navigate } = useRouter();
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[var(--st-bg)] text-[var(--st-text)]">
+    <div className="flex min-h-dvh flex-col bg-(--st-bg) text-(--st-text)">
       <a
         href="#main-content"
-        className="visually-hidden fixed top-3 left-3 z-50 rounded-lg bg-[var(--st-accent)] px-4 py-2 text-sm font-semibold text-[var(--st-accent-text)] shadow-lg"
+        className="visually-hidden fixed top-3 left-3 z-50 rounded-lg bg-(--st-accent) px-4 py-2 text-sm font-semibold text-(--st-accent-text) shadow-lg"
       >
         Skip to main content
       </a>
 
-      <header className="st-safe-top sticky top-0 z-20 border-b border-[var(--st-border)] bg-[var(--st-bg)]/90 backdrop-blur-md">
+      <header className="st-safe-top sticky top-0 z-20 border-b border-(--st-border) bg-(--st-bg)/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
             <a
@@ -40,11 +40,11 @@ export function AppShell({ children }: AppShellProps) {
                 event.preventDefault();
                 navigate('tuner');
               }}
-              className="inline-flex min-h-10 items-center gap-2.5 rounded-xl px-1 text-base font-semibold tracking-tight text-[var(--st-text)]"
+              className="inline-flex min-h-10 items-center gap-2.5 rounded-xl px-1 text-base font-semibold tracking-tight text-(--st-text)"
             >
               <span
                 aria-hidden="true"
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--st-border)] bg-[var(--st-surface-elevated)]"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-(--st-border) bg-(--st-surface-elevated)"
               >
                 <svg
                   viewBox="0 0 24 24"

@@ -19,7 +19,6 @@
     "noImplicitReturns": true,
     "types": ["vite/client", "vite-plugin-pwa/client"]
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"]
 }
 
