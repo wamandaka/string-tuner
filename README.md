@@ -53,10 +53,10 @@ npm run test:e2e
 
 ---
 
-## Production Build & Cloudflare Pages Deployment
+## Production Build & Cloudflare Deployment
 
 - **Build command**: `npm run build`
 - **Build output directory**: `dist`
-- **SPA Routing**: [`public/_redirects`](public/_redirects) copies into `dist/_redirects` (`/* /index.html 200`) for direct navigation to `/metronome`, `/chords`, and `/settings`.
+- **SPA Routing**: Both Cloudflare Workers Static Assets (`not_found_handling: "single-page-application"`, auto-detected for Vite by Wrangler) and Cloudflare Pages automatically serve `index.html` for unknown routes (`/metronome`, `/chords`, `/settings`) when no `404.html` or conflicting `_redirects` rule is present.
 - **HTTPS Requirement**: Browser `navigator.mediaDevices.getUserMedia` requires a secure context (`https://` or `http://localhost`).
 
