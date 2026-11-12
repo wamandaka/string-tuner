@@ -1,8 +1,8 @@
 # StringTune
 
-**StringTune** is a lightweight, mobile-first, offline-capable Progressive Web App (PWA) for guitarists, featuring a real-time Web Audio guitar & chromatic tuner, a lookahead-scheduled metronome, and an interactive chord reference library.
+**StringTune** is a lightweight, mobile-first, offline-capable Progressive Web App (PWA) for guitarists, featuring a real-time Web Audio guitar & chromatic tuner, a lookahead-scheduled metronome, an interactive chord reference library, and a song lyrics lookup tool.
 
-All audio acquisition, DSP pitch detection, timing synthesis, and user preferences run **100% locally in the browser** with no backend, no external APIs, and no authentication.
+All audio acquisition, DSP pitch detection, timing synthesis, and user preferences run **100% locally in the browser** with no backend or authentication, while optional song lyrics lookup queries the free, keyless public [LRCLIB](https://lrclib.net) API directly over HTTPS.
 
 ---
 
@@ -25,7 +25,12 @@ All audio acquisition, DSP pitch detection, timing synthesis, and user preferenc
 - **Open & Barre Support** — custom SVG fretboard diagrams with nut/base-fret positioning, muted/open markers, barre bars, finger numbers (`1–4`), tap-to-inspect string fingering, and local Web Audio strum preview.
 - **Search, Filter & Favorites** — filter by chord category, open vs. barre voicing, search query, and persistent local favorites.
 
-### 4. Settings & Offline PWA
+### 4. Song Lyrics Lookup (Public LRCLIB API)
+- **Keyless Public Search** — searches songs by title or artist via `https://lrclib.net/api/search` (no API key or backend required).
+- **Plain & Synced Views** — switch between plain lyrics and timestamped LRC lines (`[mm:ss]`) when available, adjust reader text size (`S / M / L`), copy lyrics, or enable smooth Auto-Scroll while practicing.
+- **Save for Offline** — bookmark lyrics locally in `localStorage` so saved songs remain accessible even when offline.
+
+### 5. Settings & Offline PWA
 - **Theme Preference** — Dark-first UI with Light and System modes via `<meta name="color-scheme">` and `light-dark()` CSS tokens.
 - **Tuner Defaults & Diagnostics** — default tuning preset, default chromatic toggle, microphone permission state check, audio input testing, and local storage reset controls.
 - **Installable PWA** — generated Web App Manifest, PNG/SVG/maskable icons, and Workbox precached offline shell via `vite-plugin-pwa`.
@@ -57,6 +62,6 @@ npm run test:e2e
 
 - **Build command**: `npm run build`
 - **Build output directory**: `dist`
-- **SPA Routing**: Both Cloudflare Workers Static Assets (`not_found_handling: "single-page-application"`, auto-detected for Vite by Wrangler) and Cloudflare Pages automatically serve `index.html` for unknown routes (`/metronome`, `/chords`, `/settings`) when no `404.html` or conflicting `_redirects` rule is present.
+- **SPA Routing**: Both Cloudflare Workers Static Assets (`not_found_handling: "single-page-application"`, auto-detected for Vite by Wrangler) and Cloudflare Pages automatically serve `index.html` for unknown routes (`/metronome`, `/chords`, `/lyrics`, `/settings`) when no `404.html` or conflicting `_redirects` rule is present.
 - **HTTPS Requirement**: Browser `navigator.mediaDevices.getUserMedia` requires a secure context (`https://` or `http://localhost`).
 

@@ -500,13 +500,13 @@ export function LyricsScreen() {
                           type="button"
                           aria-pressed={displayMode === mode}
                           onClick={() => setDisplayMode(mode)}
-                          className={`min-h-8 rounded-lg px-2.5 py-1 text-xs font-semibold capitalize transition-colors ${
+                          className={`min-h-8 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
                             displayMode === mode
                               ? 'bg-[var(--st-accent)] text-[var(--st-accent-text)]'
                               : 'text-[var(--st-text-muted)] hover:text-[var(--st-text)]'
                           }`}
                         >
-                          {mode}
+                          {mode === 'plain' ? 'Plain' : 'Synced'}
                         </button>
                       ))}
                     </div>

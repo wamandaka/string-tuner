@@ -310,7 +310,7 @@ test.describe('StringTune primary flows', () => {
       '1 track',
     );
     await expect(
-      page.getByRole('heading', { name: 'Wonderwall' }),
+      page.getByRole('heading', { name: 'Wonderwall', exact: true }),
     ).toBeVisible();
     await expect(page.getByTestId('lyrics-reader-body')).toContainText(
       'Today is gonna be the day',
@@ -329,7 +329,7 @@ test.describe('StringTune primary flows', () => {
     await page.reload();
     await page.getByRole('button', { name: 'Saved Offline (1)' }).click();
     await expect(
-      page.getByRole('heading', { name: 'Wonderwall' }),
+      page.getByRole('heading', { name: 'Wonderwall', exact: true }),
     ).toBeVisible();
     await expect(page.getByTestId('lyrics-reader-body')).toContainText(
       'Today is gonna be the day',
