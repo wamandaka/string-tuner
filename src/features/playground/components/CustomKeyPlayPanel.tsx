@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { Keyboard, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Switch } from '../../../components/ui/Switch';
-import type { PlayPatternStyle } from '../../../engines/audio/ChordPreviewSynth';
+import type {
+  CustomRhythmStep,
+  PlayPatternStyle,
+} from '../../../engines/audio/ChordPreviewSynth';
 import type { ChordDefinition } from '../../chords/chords.types';
 import {
   SAMPLE_VARIATION_CUSTOM_KEYS,
@@ -25,6 +28,7 @@ interface CustomKeyPlayPanelProps {
   effectiveFrets: readonly [number, number, number, number, number, number];
   customStringMask: StringMask;
   customStringOrder: readonly number[];
+  customRhythmSteps: readonly CustomRhythmStep[];
   keyMap: PlaygroundKeyMap;
   activeCustomKeyId: string | null;
   onUpdateKeyMap: (next: PlaygroundKeyMap) => void;
@@ -47,6 +51,7 @@ const CUSTOM_KEY_PLAY_MODE_OPTIONS: ReadonlyArray<{
 }> = [
   { id: 'strum-down', label: 'Strum Down ↓' },
   { id: 'strum-up', label: 'Strum Up ↑' },
+  { id: 'custom-rhythm', label: 'Custom Pola (Genjreng / Petik)' },
   { id: 'custom-string', label: 'Petik Custom Senar' },
   { id: 'fingerpick', label: 'Fingerpick' },
   { id: 'arpeggio-down-up', label: 'Arpeggio ↓↑' },
@@ -57,6 +62,7 @@ export function CustomKeyPlayPanel({
   effectiveFrets,
   customStringMask,
   customStringOrder,
+  customRhythmSteps,
   keyMap,
   activeCustomKeyId,
   onUpdateKeyMap,
@@ -107,6 +113,10 @@ export function CustomKeyPlayPanel({
           selectedPlayMode === 'custom-string'
             ? [...customStringOrder]
             : undefined,
+        customRhythmSteps:
+          selectedPlayMode === 'custom-rhythm'
+            ? [...customRhythmSteps]
+            : undefined,
       };
 
       const filtered = keyMap.customChordBindings.filter(
@@ -127,6 +137,7 @@ export function CustomKeyPlayPanel({
   }, [
     activeChord.id,
     customLabel,
+    customRhythmSteps,
     customStringOrder,
     detectedName,
     isCapturing,
@@ -159,17 +170,20 @@ export function CustomKeyPlayPanel({
           <Keyboard className="h-4 w-4 text-(--st-accent)" aria-hidden="true" />
           <div>
             <h2 className="text-sm font-semibold text-(--st-text)">
-              Play by Custom Key (Chord, Variasi Senar &amp; Custom String)
+              Main Pakai Tombol Keyboard (Play by Custom Key)
             </h2>
             <p className="text-xs text-(--st-text-muted)">
-              Simpan voicing atau variasi chord aktif ke tombol keyboard mana
-              pun lalu tekan tombolnya untuk langsung main
+              Simpan chord aktif (termasuk variasi senar) ke 1 huruf keyboard,
+              lalu tekan huruf tersebut untuk langsung memainkannya
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-(--st-border) bg-(--st-surface-elevated) px-2.5 py-1">
+          <div
+            title="Aktifkan agar huruf Q–P / A–; tidak memetik melodi senar saat Anda memakai custom key"
+            className="flex items-center gap-2 rounded-xl border border-(--st-border) bg-(--st-surface-elevated) px-2.5 py-1"
+          >
             <span className="text-[11px] font-semibold text-(--st-text)">
               Fokus Custom Key (Kunci Q–P)
             </span>
@@ -191,6 +205,14 @@ export function CustomKeyPlayPanel({
             <span>Contoh Variasi C (U/I/O)</span>
           </button>
         </div>
+      </div>
+
+      {/* Quick 3-Step Tip */}
+      <div className="mt-3 rounded-xl border border-(--st-border) bg-(--st-surface-elevated)/60 px-3 py-2 text-[11px] text-(--st-text-muted)">
+        <strong className="text-(--st-text)">Cara pakai:</strong> ① Pilih chord
+        atau atur variasi di tab <em>Variasi &amp; Custom Senar</em> → ② Pilih
+        cara main di bawah → ③ Klik <strong>Bind ke Custom Key</strong> lalu
+        tekan 1 tombol keyboard.
       </div>
 
       {/* Bind Current Voicing & Variation to a Keyboard Key */}

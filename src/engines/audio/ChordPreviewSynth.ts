@@ -29,7 +29,16 @@ export type PlayPatternStyle =
   | 'arpeggio-up'
   | 'arpeggio-down-up'
   | 'fingerpick'
-  | 'custom-string';
+  | 'custom-string'
+  | 'custom-rhythm';
+
+export type CustomRhythmStep =
+  | { kind: 'strum-down' }
+  | { kind: 'strum-up' }
+  | { kind: 'chuck' }
+  | { kind: 'rest' }
+  | { kind: 'pluck-bass' }
+  | { kind: 'pluck'; stringIndex: number };
 
 export interface ChordNoteInfo {
   stringIndex: number;
@@ -43,6 +52,8 @@ export interface PlayPatternStep {
   note: ChordNoteInfo;
   delaySeconds: number;
   gain: number;
+  isChuck?: boolean;
+  stopsPrevious?: boolean;
 }
 
 export interface PlayChordOptions {
@@ -52,6 +63,8 @@ export interface PlayChordOptions {
   pattern?: PlayPatternStyle;
   strumIntervalMs?: number;
   customStringOrder?: readonly number[];
+  customRhythmSteps?: readonly CustomRhythmStep[];
+  rhythmStepMs?: number;
 }
 
 export interface PlayStringOptions {
@@ -435,6 +448,45 @@ function getStringVelocityGain(
 }
 
 /**
+ * Synthesizes a short percussive muted-string guitar "chuck" / palm-slap sound.
+ */
+export function synthesizePercussiveChuckBuffer(
+  ctx: BaseAudioContext,
+): AudioBuffer {
+  const sampleRate = ctx.sampleRate || 44100;
+  const totalSamples = Math.max(1, Math.round(sampleRate * 0.085));
+  const buffer = ctx.createBuffer(1, totalSamples, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  let seed = 94107;
+  let prev = 0;
+  for (let i = 0; i < totalSamples; i++) {
+    seed = (1664525 * seed + 1013904223) >>> 0;
+    const noise = (seed / 0xffffffff) * 2 - 1;
+    // Band-limited scratchy string hit + subtle low woody body thump
+    const highPassNoise = noise - 0.72 * prev;
+    prev = noise;
+    const t = i / sampleRate;
+    const thump = Math.sin(2 * Math.PI * 145 * t) * Math.exp(-t * 65);
+    const env = Math.exp(-t * 58);
+    data[i] = (0.55 * highPassNoise + 0.45 * thump) * env * 0.8;
+  }
+
+  return buffer;
+}
+
+const DEFAULT_CUSTOM_RHYTHM_STEPS: readonly CustomRhythmStep[] = [
+  { kind: 'strum-down' },
+  { kind: 'rest' },
+  { kind: 'strum-down' },
+  { kind: 'strum-up' },
+  { kind: 'rest' },
+  { kind: 'strum-up' },
+  { kind: 'strum-down' },
+  { kind: 'strum-up' },
+];
+
+/**
  * Builds a timed note sequence for directional strums and picking/arpeggio patterns.
  */
 export function buildPlayPatternSequence(
@@ -442,6 +494,8 @@ export function buildPlayPatternSequence(
   pattern: PlayPatternStyle,
   strumIntervalSeconds?: number,
   customStringOrder?: readonly number[],
+  customRhythmSteps?: readonly CustomRhythmStep[],
+  rhythmStepSeconds?: number,
 ): PlayPatternStep[] {
   if (notes.length === 0) {
     return [];
@@ -533,6 +587,83 @@ export function buildPlayPatternSequence(
         gain: idx === 0 ? 0.96 : 0.84,
       }));
     }
+    case 'custom-rhythm': {
+      const steps =
+        customRhythmSteps && customRhythmSteps.length > 0
+          ? customRhythmSteps
+          : DEFAULT_CUSTOM_RHYTHM_STEPS;
+      const beatStep = rhythmStepSeconds ?? 0.28;
+      const noteByString = new Map<number, ChordNoteInfo>();
+      for (const note of notes) {
+        noteByString.set(note.stringIndex, note);
+      }
+
+      const output: PlayPatternStep[] = [];
+      for (let stepIdx = 0; stepIdx < steps.length; stepIdx++) {
+        const rhythmStep = steps[stepIdx]!;
+        const baseDelay = stepIdx * beatStep;
+
+        switch (rhythmStep.kind) {
+          case 'rest':
+            break;
+          case 'strum-down': {
+            const strumGap = 0.028;
+            for (let i = 0; i < notes.length; i++) {
+              output.push({
+                note: notes[i]!,
+                delaySeconds: baseDelay + i * strumGap,
+                gain: getStringVelocityGain(i, total),
+              });
+            }
+            break;
+          }
+          case 'strum-up': {
+            const strumGap = 0.024;
+            const reversed = [...notes].reverse();
+            for (let i = 0; i < reversed.length; i++) {
+              const progress =
+                reversed.length <= 1 ? 0 : i / (reversed.length - 1);
+              output.push({
+                note: reversed[i]!,
+                delaySeconds: baseDelay + i * strumGap,
+                gain: 0.78 - progress * 0.1,
+              });
+            }
+            break;
+          }
+          case 'chuck': {
+            output.push({
+              note: notes[0]!,
+              delaySeconds: baseDelay,
+              gain: 0.72,
+              isChuck: true,
+              stopsPrevious: true,
+            });
+            break;
+          }
+          case 'pluck-bass': {
+            output.push({
+              note: notes[0]!,
+              delaySeconds: baseDelay,
+              gain: 0.96,
+            });
+            break;
+          }
+          case 'pluck': {
+            const matched = noteByString.get(rhythmStep.stringIndex);
+            if (matched) {
+              output.push({
+                note: matched,
+                delaySeconds: baseDelay,
+                gain: 0.9,
+              });
+            }
+            break;
+          }
+        }
+      }
+      return output;
+    }
   }
 }
 
@@ -574,11 +705,18 @@ export async function playChordPreview(
       ? Math.max(0.01, options.strumIntervalMs / 1000)
       : undefined;
 
+  const rhythmStepSeconds =
+    options?.rhythmStepMs !== undefined
+      ? Math.max(0.08, options.rhythmStepMs / 1000)
+      : undefined;
+
   const sequence = buildPlayPatternSequence(
     notes,
     pattern,
     strumIntervalSeconds,
     options?.customStringOrder,
+    options?.customRhythmSteps,
+    rhythmStepSeconds,
   );
   const tone = options?.tone ?? getGuitarTonePreference();
   let remoteBuffers: Array<AudioBuffer | null>;
@@ -605,6 +743,9 @@ export async function playChordPreview(
     bufferByStringIndex.set(note.stringIndex, resolved);
   }
 
+  const hasChuckStep = sequence.some((step) => step.isChuck);
+  const chuckBuffer = hasChuckStep ? synthesizePercussiveChuckBuffer(ctx) : null;
+
   const master = ctx.createGain();
   master.gain.setValueAtTime(0.75, ctx.currentTime);
   master.connect(ctx.destination);
@@ -612,14 +753,38 @@ export async function playChordPreview(
 
   const baseTime = ctx.currentTime + 0.02;
   const startedSources: AudioBufferSourceNode[] = [];
+  const scheduledVoices: Array<{
+    gain: GainNode;
+    initialGain: number;
+    startTime: number;
+  }> = [];
 
   for (const step of sequence) {
-    const buffer = bufferByStringIndex.get(step.note.stringIndex);
+    const buffer = step.isChuck
+      ? chuckBuffer
+      : bufferByStringIndex.get(step.note.stringIndex);
     if (!buffer) {
       continue;
     }
 
     const startTime = baseTime + step.delaySeconds;
+
+    if (step.stopsPrevious) {
+      for (const prev of scheduledVoices) {
+        if (prev.startTime < startTime) {
+          try {
+            prev.gain.gain.setValueAtTime(
+              prev.initialGain,
+              Math.max(ctx.currentTime, startTime - 0.002),
+            );
+            prev.gain.gain.linearRampToValueAtTime(0.0001, startTime + 0.022);
+          } catch {
+            // Ignore gain automation issues on closed contexts.
+          }
+        }
+      }
+    }
+
     const source = ctx.createBufferSource();
     source.buffer = buffer;
 
@@ -631,6 +796,13 @@ export async function playChordPreview(
 
     source.start(startTime);
     startedSources.push(source);
+    if (!step.isChuck) {
+      scheduledVoices.push({
+        gain: noteGain,
+        initialGain: step.gain,
+        startTime,
+      });
+    }
   }
 
   activeSources = startedSources;

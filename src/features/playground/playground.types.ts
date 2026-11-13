@@ -1,4 +1,25 @@
-import type { PlayPatternStyle } from '../../engines/audio/ChordPreviewSynth';
+import type {
+  CustomRhythmStep,
+  PlayPatternStyle,
+} from '../../engines/audio/ChordPreviewSynth';
+
+export interface SlotCustomAssignment {
+  /** Per-slot override for play pattern (e.g. 'custom-rhythm', 'custom-string', 'fingerpick') */
+  pattern?: PlayPatternStyle;
+  /** Per-slot custom rhythm steps when pattern === 'custom-rhythm' */
+  customRhythmSteps?: CustomRhythmStep[];
+  /** Per-slot custom string picking order when pattern === 'custom-string' */
+  customStringOrder?: number[];
+  /** Per-slot custom beats count (1..32); falls back to global beatsPerChord */
+  beats?: number;
+  /** How many consecutive times this slot replays its pattern before advancing (1..8) */
+  repeat?: number;
+}
+
+export interface ProgressionSlot {
+  chordId: string;
+  custom?: SlotCustomAssignment;
+}
 
 export interface ChordProgressionPreset {
   id: string;
@@ -60,7 +81,95 @@ export const PLAY_PATTERN_OPTIONS: readonly PlayPatternOption[] = [
     mode: 'petik',
     description: 'Mainkan urutan & senar custom yang Anda pilih',
   },
+  {
+    id: 'custom-rhythm',
+    label: 'Custom Pola (Genjreng / Petik)',
+    mode: 'strum',
+    description: 'Susun sendiri pola irama genjreng (↓ ↑ × —) & petik',
+  },
 ] as const;
+
+export interface CustomRhythmPreset {
+  id: string;
+  label: string;
+  notation: string;
+  steps: readonly CustomRhythmStep[];
+}
+
+export const CUSTOM_RHYTHM_PRESETS: readonly CustomRhythmPreset[] = [
+  {
+    id: 'island-pop',
+    label: 'Pop Populer',
+    notation: '↓ — ↓ ↑ — ↑ ↓ ↑',
+    steps: [
+      { kind: 'strum-down' },
+      { kind: 'rest' },
+      { kind: 'strum-down' },
+      { kind: 'strum-up' },
+      { kind: 'rest' },
+      { kind: 'strum-up' },
+      { kind: 'strum-down' },
+      { kind: 'strum-up' },
+    ],
+  },
+  {
+    id: 'ballad-slow',
+    label: 'Pelan / Ballad',
+    notation: '↓ — ↓ ↑',
+    steps: [
+      { kind: 'strum-down' },
+      { kind: 'rest' },
+      { kind: 'strum-down' },
+      { kind: 'strum-up' },
+    ],
+  },
+  {
+    id: 'acoustic-chuck',
+    label: 'Akustik Perkusi',
+    notation: '↓ × ↑ × ↓ × ↑ ×',
+    steps: [
+      { kind: 'strum-down' },
+      { kind: 'chuck' },
+      { kind: 'strum-up' },
+      { kind: 'chuck' },
+      { kind: 'strum-down' },
+      { kind: 'chuck' },
+      { kind: 'strum-up' },
+      { kind: 'chuck' },
+    ],
+  },
+  {
+    id: 'rock-upbeat',
+    label: 'Cepat / Rock',
+    notation: '↓ ↑ ↓ ↑ ↓ ↑ ↓ ↑',
+    steps: [
+      { kind: 'strum-down' },
+      { kind: 'strum-up' },
+      { kind: 'strum-down' },
+      { kind: 'strum-up' },
+      { kind: 'strum-down' },
+      { kind: 'strum-up' },
+      { kind: 'strum-down' },
+      { kind: 'strum-up' },
+    ],
+  },
+  {
+    id: 'bass-strum',
+    label: 'Petik Bass + Genjreng',
+    notation: 'Bass ↓ ↑ Bass ↓ ↑',
+    steps: [
+      { kind: 'pluck-bass' },
+      { kind: 'strum-down' },
+      { kind: 'strum-up' },
+      { kind: 'pluck-bass' },
+      { kind: 'strum-down' },
+      { kind: 'strum-up' },
+    ],
+  },
+];
+
+export const DEFAULT_CUSTOM_RHYTHM_STEPS: readonly CustomRhythmStep[] =
+  CUSTOM_RHYTHM_PRESETS[0]!.steps;
 
 export const PROGRESSION_PRESETS: readonly ChordProgressionPreset[] = [
   {
@@ -150,6 +259,7 @@ export type RemappableActionId =
   | 'fingerpick'
   | 'strum-custom-string'
   | 'pick-custom-string'
+  | 'play-custom-rhythm'
   | 'mute'
   | 'chord-1'
   | 'chord-2'
@@ -175,6 +285,7 @@ export interface CustomChordKeyBinding {
   frets: [number, number, number, number, number, number];
   playMode: PlayPatternStyle;
   customStringOrder?: number[];
+  customRhythmSteps?: CustomRhythmStep[];
 }
 
 export interface PlaygroundKeyMap {
@@ -319,6 +430,7 @@ export const DEFAULT_PLAYGROUND_KEYMAP: PlaygroundKeyMap = {
     fingerpick: ']',
     'strum-custom-string': ',',
     'pick-custom-string': '.',
+    'play-custom-rhythm': '/',
     mute: 'm',
     'chord-1': '1',
     'chord-2': '2',
@@ -353,6 +465,7 @@ export const REMAPPABLE_ACTION_META: ReadonlyArray<{
   { id: 'fingerpick', label: 'Petik Fingerpick', group: 'patterns' },
   { id: 'strum-custom-string', label: 'Strum Custom Senar', group: 'patterns' },
   { id: 'pick-custom-string', label: 'Petik Urutan Senar', group: 'patterns' },
+  { id: 'play-custom-rhythm', label: 'Mainkan Custom Pola', group: 'patterns' },
   { id: 'mute', label: 'Mute Senar', group: 'patterns' },
   { id: 'chord-1', label: 'Chord Slot 1', group: 'chords' },
   { id: 'chord-2', label: 'Chord Slot 2', group: 'chords' },

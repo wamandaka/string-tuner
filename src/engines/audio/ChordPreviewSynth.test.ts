@@ -347,5 +347,44 @@ describe('ChordPreviewSynth', () => {
     expect(sequence[1]!.delaySeconds).toBeCloseTo(0.1);
     expect(sequence[4]!.delaySeconds).toBeCloseTo(0.4);
   });
+
+  it('builds custom-rhythm sequences with strum-down, strum-up, chuck, rest, and pluck-bass', () => {
+    const cNotes = getChordMidiNotes([-1, 3, 2, 0, 1, 0]); // 5 notes
+    const sequence = buildPlayPatternSequence(
+      cNotes,
+      'custom-rhythm',
+      undefined,
+      undefined,
+      [
+        { kind: 'pluck-bass' },
+        { kind: 'rest' },
+        { kind: 'strum-down' },
+        { kind: 'chuck' },
+        { kind: 'strum-up' },
+      ],
+      0.25,
+    );
+
+    // step 0: pluck-bass (1 note at 0.0s)
+    // step 1: rest (0 notes)
+    // step 2: strum-down (5 notes starting at 0.50s)
+    // step 3: chuck (1 percussive hit at 0.75s with isChuck + stopsPrevious)
+    // step 4: strum-up (5 notes reversed starting at 1.00s)
+    expect(sequence).toHaveLength(1 + 5 + 1 + 5);
+    expect(sequence[0]!.note.stringIndex).toBe(1); // A2 bass root of C
+    expect(sequence[0]!.delaySeconds).toBeCloseTo(0);
+
+    expect(sequence[1]!.delaySeconds).toBeCloseTo(0.5);
+    expect(sequence[1]!.note.stringIndex).toBe(1);
+    expect(sequence[5]!.note.stringIndex).toBe(5);
+
+    const chuckStep = sequence[6]!;
+    expect(chuckStep.isChuck).toBe(true);
+    expect(chuckStep.stopsPrevious).toBe(true);
+    expect(chuckStep.delaySeconds).toBeCloseTo(0.75);
+
+    expect(sequence[7]!.delaySeconds).toBeCloseTo(1.0);
+    expect(sequence[7]!.note.stringIndex).toBe(5);
+  });
 });
 

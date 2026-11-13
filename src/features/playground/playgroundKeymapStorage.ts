@@ -26,6 +26,7 @@ const VALID_PLAY_MODES = new Set<PlayPatternStyle>([
   'arpeggio-down-up',
   'fingerpick',
   'custom-string',
+  'custom-rhythm',
 ]);
 
 /**
@@ -157,6 +158,14 @@ export function loadPlaygroundKeyMap(): PlaygroundKeyMap {
                 (s) => Number.isInteger(s) && s >= 0 && s <= 5,
               )
             : undefined;
+          const customRhythmSteps = Array.isArray(entry.customRhythmSteps)
+            ? entry.customRhythmSteps.filter(
+                (step) =>
+                  step &&
+                  typeof step === 'object' &&
+                  typeof step.kind === 'string',
+              )
+            : undefined;
           customChordBindings.push({
             id: entry.id,
             key: normalizeKeyboardKey(entry.key),
@@ -167,6 +176,10 @@ export function loadPlaygroundKeyMap(): PlaygroundKeyMap {
             customStringOrder:
               customStringOrder && customStringOrder.length > 0
                 ? customStringOrder
+                : undefined,
+            customRhythmSteps:
+              customRhythmSteps && customRhythmSteps.length > 0
+                ? customRhythmSteps
                 : undefined,
           });
         }

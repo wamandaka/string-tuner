@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PreferencesProvider } from '../../app/providers/PreferencesProvider';
 import { RouterProvider } from '../../app/router';
@@ -94,9 +94,9 @@ describe('Guitar Playground', () => {
       expect.objectContaining({ pattern: 'arpeggio-down-up' }),
     );
 
-    // Pluck individual string 6 (E2) on E7
+    // Pluck individual string 6 (E2) via Soundhole Pick on E7
     const string6Btn = screen.getByRole('button', {
-      name: /Pluck string 6 \(E\), E2/i,
+      name: /Pick Senar 6 \(E\), E2/i,
     });
     fireEvent.pointerDown(string6Btn);
     expect(ChordPreviewSynth.playStringPreview).toHaveBeenCalledWith(
@@ -110,7 +110,7 @@ describe('Guitar Playground', () => {
       screen.getByRole('button', { name: 'Pop Anthem (C–G–Am–F)' }),
     );
     expect(
-      screen.getByRole('button', { name: 'String 6 (E): Muted' }),
+      screen.getByRole('button', { name: 'Pick Senar 6 (E): Muted' }),
     ).toBeDisabled();
   });
 
@@ -131,9 +131,9 @@ describe('Guitar Playground', () => {
       'G4 · Senar 1 Fret 3',
     );
 
-    // Enable Pin Fret (Fingerstyle) mode and pin Fret 3 on String 1 over C Major [-1, 3, 2, 0, 1, 0]
+    // Enable Edit Jari di Fret mode and pin Fret 3 on String 1 over C Major [-1, 3, 2, 0, 1, 0]
     fireEvent.click(
-      screen.getByRole('button', { name: /Pin Fret \(Fingerstyle\)/i }),
+      screen.getByRole('button', { name: /Edit Jari di Fret/i }),
     );
     fireEvent.pointerDown(fretCell);
 
@@ -178,8 +178,15 @@ describe('Guitar Playground', () => {
       expect.objectContaining({ pattern: 'strum-down' }),
     );
 
-    // Remap 'Strum Down ↓' from Space to 'k' in Custom Key panel
-    fireEvent.click(screen.getByRole('button', { name: 'Custom Key' }));
+    // Open Tab 3 -> Pengaturan Tombol Bawaan -> Remap 'Strum Down ↓' from Space to 'k'
+    fireEvent.click(
+      screen.getByRole('tab', { name: /3\. Main Pakai Keyboard/i }),
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /Atur Tombol Bawaan Keyboard/i,
+      }),
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Ubah tombol Strum Down ↓' }));
     fireEvent.keyDown(window, { key: 'K' });
 
@@ -205,6 +212,11 @@ describe('Guitar Playground', () => {
   it('supports chord string variations (open/mute), play by custom string, and play by custom key', () => {
     renderPlayground();
 
+    // Open Tab 2: Variasi & Custom Senar
+    fireEvent.click(
+      screen.getByRole('tab', { name: /2\. Variasi & Custom Senar/i }),
+    );
+
     // Starts on C Major [-1, 3, 2, 0, 1, 0]
     expect(screen.getByTestId('variation-detected-label')).toHaveTextContent(
       'C (X-3-2-0-1-0)',
@@ -223,7 +235,10 @@ describe('Guitar Playground', () => {
       expect.objectContaining({ polyphonic: true }),
     );
 
-    // Bind this variation to custom key 'u' (Play by Custom Key)
+    // Open Tab 3: Main Pakai Keyboard -> Bind this variation to custom key 'u'
+    fireEvent.click(
+      screen.getByRole('tab', { name: /3\. Main Pakai Keyboard/i }),
+    );
     const labelInput = screen.getByLabelText('Label custom key voicing');
     fireEvent.change(labelInput, { target: { value: 'C Var Lepas S2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Bind ke Custom Key' }));
@@ -246,7 +261,10 @@ describe('Guitar Playground', () => {
       expect.objectContaining({ pattern: 'strum-down' }),
     );
 
-    // Test Play by Custom String: disable String 1 (e), then Strum Custom Senar & Petik Urutan Senar
+    // Back to Tab 2: Test Play by Custom String
+    fireEvent.click(
+      screen.getByRole('tab', { name: /2\. Variasi & Custom Senar/i }),
+    );
     fireEvent.click(
       screen.getByRole('button', { name: 'Reset ke C Asli' }),
     );
@@ -277,5 +295,303 @@ describe('Guitar Playground', () => {
     expect(screen.getByTestId('variation-detected-label')).toHaveTextContent(
       'X-3-X-0-1-0',
     );
+  });
+
+  it('builds and plays custom strum and custom petik rhythm patterns', () => {
+    renderPlayground();
+
+    // Select 'Pelan / Ballad' preset in Custom Pola Genjreng & Petik
+    fireEvent.click(screen.getByRole('button', { name: /Pelan \/ Ballad/i }));
+    expect(ChordPreviewSynth.playChordPreview).toHaveBeenLastCalledWith(
+      [-1, 3, 2, 0, 1, 0],
+      expect.objectContaining({
+        pattern: 'custom-rhythm',
+        customRhythmSteps: [
+          { kind: 'strum-down' },
+          { kind: 'rest' },
+          { kind: 'strum-down' },
+          { kind: 'strum-up' },
+        ],
+      }),
+    );
+
+    // Append a percussive chuck and a bass pluck
+    fireEvent.click(screen.getByRole('button', { name: '+ × Mute (Chuck)' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ Petik Bass' }));
+
+    vi.mocked(ChordPreviewSynth.playChordPreview).mockClear();
+    fireEvent.keyDown(window, { key: '/' }); // Play Custom Pola shortcut
+    expect(ChordPreviewSynth.playChordPreview).toHaveBeenCalledWith(
+      [-1, 3, 2, 0, 1, 0],
+      expect.objectContaining({
+        pattern: 'custom-rhythm',
+        customRhythmSteps: [
+          { kind: 'strum-down' },
+          { kind: 'rest' },
+          { kind: 'strum-down' },
+          { kind: 'strum-up' },
+          { kind: 'chuck' },
+          { kind: 'pluck-bass' },
+        ],
+      }),
+    );
+  });
+
+  it('supports drag and drop for chord progression, picker chords, custom rhythm, and custom string order', () => {
+    renderPlayground();
+
+    // 1. Reorder active progression slots: drag Slot 1 (C Major) onto Slot 2 (G Major)
+    const progressionList = screen.getByRole('list', {
+      name: 'Active chord progression',
+    });
+    const slotItems = Array.from(
+      progressionList.querySelectorAll('[role="listitem"]'),
+    );
+    expect(slotItems).toHaveLength(4);
+    fireEvent.dragStart(slotItems[0]!);
+    fireEvent.dragOver(slotItems[1]!);
+    fireEvent.drop(slotItems[1]!);
+
+    expect(
+      screen.getByRole('button', { name: 'Slot 1: G Major' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Slot 2: C Major' }),
+    ).toBeInTheDocument();
+
+    // 2. Drag a chord from Chord Picker Drawer onto Slot 1
+    fireEvent.click(screen.getByRole('button', { name: /Tambah Chord/i }));
+    const dChordPickerBtn = screen.getByRole('button', { name: 'D (D Major)' });
+    const updatedSlot1 = progressionList.querySelectorAll('[role="listitem"]')[0]!;
+    fireEvent.dragStart(dChordPickerBtn);
+    fireEvent.dragOver(updatedSlot1);
+    fireEvent.drop(updatedSlot1);
+    expect(
+      screen.getByRole('button', { name: 'Slot 1: D Major' }),
+    ).toBeInTheDocument();
+
+    // 3. Drag and drop Custom Pola steps (reorder & drop from palette)
+    fireEvent.click(screen.getByRole('button', { name: /Pelan \/ Ballad/i }));
+    const rhythmList = screen.getByRole('list', {
+      name: 'Custom strum and picking sequence',
+    });
+    const rhythmItems = Array.from(
+      rhythmList.querySelectorAll('[role="listitem"]'),
+    );
+    // Drag step 2 ('— Jeda') before step 1 ('↓ Turun')
+    fireEvent.dragStart(rhythmItems[1]!);
+    fireEvent.dragOver(rhythmItems[0]!);
+    fireEvent.drop(rhythmItems[0]!);
+
+    // Drag '+ × Mute (Chuck)' into rhythm sequence container
+    const chuckPaletteBtn = screen.getByRole('button', {
+      name: '+ × Mute (Chuck)',
+    });
+    fireEvent.dragStart(chuckPaletteBtn);
+    fireEvent.dragOver(rhythmList);
+    fireEvent.drop(rhythmList);
+
+    vi.mocked(ChordPreviewSynth.playChordPreview).mockClear();
+    fireEvent.keyDown(window, { key: '/' });
+    expect(ChordPreviewSynth.playChordPreview).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.objectContaining({
+        pattern: 'custom-rhythm',
+        customRhythmSteps: [
+          { kind: 'rest' },
+          { kind: 'strum-down' },
+          { kind: 'strum-down' },
+          { kind: 'strum-up' },
+          { kind: 'chuck' },
+        ],
+      }),
+    );
+
+    // 4. Drag and drop Custom String picking order in Tab 2
+    fireEvent.click(
+      screen.getByRole('tab', { name: /2\. Variasi & Custom Senar/i }),
+    );
+    const stringOrderList = screen.getByRole('list', {
+      name: 'Custom string picking order',
+    });
+    const orderChips = Array.from(
+      stringOrderList.querySelectorAll('[role="listitem"]'),
+    );
+    // Default order is [1, 3, 4, 5, 4, 3] => Senar 5, Senar 3, ...
+    // Drag chip 1 (Senar 3) before chip 0 (Senar 5) => [3, 1, 4, 5, 4, 3]
+    fireEvent.dragStart(orderChips[1]!);
+    fireEvent.dragOver(orderChips[0]!);
+    fireEvent.drop(orderChips[0]!);
+
+    // Drag '+S6' (index 0) onto the container to append => [3, 1, 4, 5, 4, 3, 0]
+    const addS6Btn = screen.getByRole('button', {
+      name: 'Tambah Senar 6 ke urutan petik',
+    });
+    fireEvent.dragStart(addS6Btn);
+    fireEvent.dragOver(stringOrderList);
+    fireEvent.drop(stringOrderList);
+
+    vi.mocked(ChordPreviewSynth.playChordPreview).mockClear();
+    fireEvent.keyDown(window, { key: '.' });
+    expect(ChordPreviewSynth.playChordPreview).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.objectContaining({
+        pattern: 'custom-string',
+        customStringOrder: [3, 1, 4, 5, 4, 3, 0],
+      }),
+    );
+  });
+
+  it('assigns custom picking/rhythm per chord slot, supports custom beats, and prevents cut-off at 180 BPM', () => {
+    vi.useFakeTimers();
+    try {
+      renderPlayground();
+
+      // Build a 12-step custom rhythm on Slot 1 (C Major)
+      fireEvent.click(screen.getByRole('button', { name: /Pelan \/ Ballad/i }));
+      for (let i = 0; i < 8; i++) {
+        fireEvent.click(screen.getByRole('button', { name: '+ ↓ Turun' }));
+      }
+      // Assign custom rhythm specifically to Slot 1 (C)
+      fireEvent.click(
+        screen.getByRole('button', { name: /Assign ke Slot 1 \(C\)/i }),
+      );
+      expect(
+        screen.getByRole('button', { name: /Terpasang di Slot 1 \(C\)/i }),
+      ).toBeInTheDocument();
+
+      // Switch global pattern to 'Fingerpick P-I-M-A'
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Fingerpick P-I-M-A' }),
+      );
+
+      // Verify Slot 1 still plays its assigned 'custom-rhythm' while Slot 2 plays global 'fingerpick'
+      vi.mocked(ChordPreviewSynth.playChordPreview).mockClear();
+      fireEvent.keyDown(window, { key: '1' });
+      expect(ChordPreviewSynth.playChordPreview).toHaveBeenLastCalledWith(
+        [-1, 3, 2, 0, 1, 0],
+        expect.objectContaining({
+          pattern: 'custom-rhythm',
+        }),
+      );
+
+      fireEvent.keyDown(window, { key: '2' });
+      expect(ChordPreviewSynth.playChordPreview).toHaveBeenLastCalledWith(
+        [3, 2, 0, 0, 0, 3],
+        expect.objectContaining({ pattern: 'fingerpick' }),
+      );
+
+      // Set custom beats on Slot 2 (G) to 6 beats
+      const slotBeatsInput = screen.getByLabelText('Ketukan khusus slot aktif');
+      fireEvent.change(slotBeatsInput, { target: { value: '6' } });
+      expect(slotBeatsInput).toHaveValue(6);
+
+      // Select Slot 1, set speed to 180 BPM, global beats stays 4
+      fireEvent.click(screen.getByRole('button', { name: 'Slot 1: C Major' }));
+      const bpmSlider = screen.getByRole('slider', { name: /Kecepatan/i });
+      fireEvent.change(bpmSlider, { target: { value: '180' } });
+
+      // Start Auto-Play: at 180 BPM (333ms/beat), 12-step custom rhythm needs 6 beats (~2004ms)
+      // With Pas Pola ON (default), after 4 beats (1332ms) it MUST NOT cut off Slot 1 yet!
+      vi.mocked(ChordPreviewSynth.playChordPreview).mockClear();
+      fireEvent.click(screen.getByRole('button', { name: 'Putar Otomatis' }));
+      expect(ChordPreviewSynth.playChordPreview).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        vi.advanceTimersByTime(333 * 4 + 20);
+      });
+      // Still on Slot 1 (no premature switch to G!)
+      expect(
+        screen.getByRole('button', { name: 'Slot 1: C Major' }),
+      ).toHaveAttribute('aria-current', 'true');
+
+      // After beat 6 completes, advances cleanly to Slot 2 (G Major) with its global 'fingerpick'
+      act(() => {
+        vi.advanceTimersByTime(333 * 2 + 20);
+      });
+      expect(
+        screen.getByRole('button', { name: 'Slot 2: G Major' }),
+      ).toHaveAttribute('aria-current', 'true');
+      expect(ChordPreviewSynth.playChordPreview).toHaveBeenLastCalledWith(
+        [3, 2, 0, 0, 0, 3],
+        expect.objectContaining({ pattern: 'fingerpick' }),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('supports repeating the same pattern 2x on a chord slot and duplicating a slot', () => {
+    vi.useFakeTimers();
+    try {
+      renderPlayground();
+
+      // Assign 'Fingerpick P-I-M-A' to Slot 1 (C Major)
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Fingerpick P-I-M-A' }),
+      );
+      fireEvent.click(
+        screen.getByRole('button', { name: /Assign .*Fingerpick.* ke Slot ini/i }),
+      );
+
+      // Cycle Slot 1 repeat pill from 1x -> 2x
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Ulang pola di Slot 1 (C): 1x' }),
+      );
+      expect(
+        screen.getByRole('button', { name: 'Ulang pola di Slot 1 (C): 2x' }),
+      ).toBeInTheDocument();
+
+      // Set global pattern to Strum Down and BPM to 120 (500ms/beat, 4 beats/cycle)
+      fireEvent.click(screen.getByRole('button', { name: 'Strum Down ↓' }));
+      fireEvent.change(screen.getByRole('slider', { name: /Kecepatan/i }), {
+        target: { value: '120' },
+      });
+
+      // Start Auto-Play:
+      // - Cycle 1 (0ms): plays C Major with fingerpick
+      // - Cycle 2 (2000ms): stays on Slot 1 (C Major) and replays fingerpick (Putaran 2/2)
+      // - Cycle 3 (4000ms): advances to Slot 2 (G Major) with strum-down
+      vi.mocked(ChordPreviewSynth.playChordPreview).mockClear();
+      fireEvent.click(screen.getByRole('button', { name: 'Putar Otomatis' }));
+      expect(ChordPreviewSynth.playChordPreview).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        vi.advanceTimersByTime(500 * 4 + 20);
+      });
+      expect(
+        screen.getByRole('button', { name: 'Slot 1: C Major' }),
+      ).toHaveAttribute('aria-current', 'true');
+      expect(ChordPreviewSynth.playChordPreview).toHaveBeenCalledTimes(2);
+      expect(ChordPreviewSynth.playChordPreview).toHaveBeenLastCalledWith(
+        [-1, 3, 2, 0, 1, 0],
+        expect.objectContaining({ pattern: 'fingerpick' }),
+      );
+
+      act(() => {
+        vi.advanceTimersByTime(500 * 4 + 20);
+      });
+      expect(
+        screen.getByRole('button', { name: 'Slot 2: G Major' }),
+      ).toHaveAttribute('aria-current', 'true');
+      expect(ChordPreviewSynth.playChordPreview).toHaveBeenLastCalledWith(
+        [3, 2, 0, 0, 0, 3],
+        expect.objectContaining({ pattern: 'strum-down' }),
+      );
+
+      // Stop loop and test duplicating Slot 1 (C) -> Slot 2 becomes C Major clone too
+      fireEvent.click(screen.getByRole('button', { name: 'Berhenti' }));
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Duplikat Slot 1 (C)' }),
+      );
+      expect(
+        screen.getByRole('button', { name: 'Slot 2: C Major' }),
+      ).toHaveAttribute('aria-current', 'true');
+      expect(
+        screen.getByRole('button', { name: 'Slot 3: G Major' }),
+      ).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

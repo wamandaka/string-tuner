@@ -1,7 +1,8 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowUp,
+  Eye,
   Pin,
   RotateCcw,
   Square,
@@ -15,6 +16,7 @@ import {
   type PlaygroundKeyMap,
   type RemappableActionId,
 } from '../playground.types';
+import { detectVariationChordLabel } from '../playgroundChordUtils';
 import { formatKeyBadge } from '../playgroundKeymapStorage';
 
 interface GuitarNeckStageProps {
@@ -131,8 +133,13 @@ export function GuitarNeckStage({
   const lastPickStringRef = useRef<number | null>(null);
   const isSweepingNeckRef = useRef(false);
   const lastNeckCellRef = useRef<string | null>(null);
+  const [showFretKeyHints, setShowFretKeyHints] = useState(false);
 
   const hasPinnedFrets = Object.keys(pinnedFrets).length > 0;
+  const variationLabel = detectVariationChordLabel(
+    effectiveFrets,
+    activeChord.symbol,
+  );
 
   const customKeyByCell = new Map<string, string>();
   for (const binding of keyMap.customFretBindings) {
@@ -145,7 +152,14 @@ export function GuitarNeckStage({
   const getCellHintKey = (stringIndex: number, fret: number): string | null => {
     const custom = customKeyByCell.get(`${stringIndex}:${fret}`);
     if (custom) return custom;
-    if (!keyMap.enableFretMelodyKeys || fret > 9) return null;
+    if (
+      !showFretKeyHints ||
+      !keyMap.enableFretMelodyKeys ||
+      keyMap.playByCustomKeyOnly ||
+      fret > 9
+    ) {
+      return null;
+    }
     if (stringIndex === 5) {
       return formatKeyBadge(STRING_1_MELODY_KEYS[fret]!);
     }
@@ -175,7 +189,7 @@ export function GuitarNeckStage({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-lg bg-amber-500/20 px-2.5 py-1 text-xs font-bold tracking-wide text-amber-300">
-            Real Guitar Fretboard · Fingerstyle
+            Kunci: {variationLabel}
           </span>
           {activePlayedNote ? (
             <span
@@ -184,22 +198,40 @@ export function GuitarNeckStage({
             >
               {activePlayedNote.noteName} · Senar {6 - activePlayedNote.stringIndex}{' '}
               {activePlayedNote.fret === 0
-                ? 'Open'
+                ? 'Lepas (Open)'
                 : `Fret ${activePlayedNote.fret}`}
             </span>
           ) : (
-            <span className="text-xs text-stone-400">
-              Klik/geser pada fret 0–12 untuk main melodi, atau petik pick di
-              lubang gitar
+            <span className="text-xs text-stone-300">
+              Klik <strong>Genjreng</strong>, petik senar berwarna, atau tekan
+              kolom fret
             </span>
           )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
+          {keyMap.enableFretMelodyKeys && !keyMap.playByCustomKeyOnly ? (
+            <button
+              type="button"
+              aria-pressed={showFretKeyHints}
+              onClick={() => setShowFretKeyHints((prev) => !prev)}
+              className={`inline-flex min-h-8 items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold transition-colors ${
+                showFretKeyHints
+                  ? 'border-sky-400/60 bg-sky-500/15 text-sky-200'
+                  : 'border-stone-700 bg-stone-800/80 text-stone-300 hover:border-stone-500'
+              }`}
+              title="Tampilkan petunjuk huruf keyboard (Q-P & A-;) di atas papan fret"
+            >
+              <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Huruf Fret</span>
+            </button>
+          ) : null}
+
           <button
             type="button"
             aria-pressed={pinFretMode}
             onClick={onTogglePinFretMode}
+            title="Aktifkan agar klik pada fret langsung mengubah posisi jari chord aktif"
             className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors ${
               pinFretMode
                 ? 'border-amber-400 bg-amber-400/20 text-amber-200'
@@ -208,7 +240,7 @@ export function GuitarNeckStage({
           >
             <Pin className="h-3.5 w-3.5" aria-hidden="true" />
             <span>
-              {pinFretMode ? 'Pin Fret: ON' : 'Pin Fret (Fingerstyle)'}
+              {pinFretMode ? 'Edit Jari Fret: ON' : 'Edit Jari di Fret'}
             </span>
           </button>
 
@@ -219,7 +251,7 @@ export function GuitarNeckStage({
               className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-stone-700 bg-stone-800/80 px-2.5 py-1 text-xs font-semibold text-stone-300 hover:border-stone-500 hover:text-white"
             >
               <RotateCcw className="h-3 w-3" aria-hidden="true" />
-              <span>Reset Pin</span>
+              <span>Reset Variasi</span>
             </button>
           ) : null}
         </div>
@@ -228,10 +260,10 @@ export function GuitarNeckStage({
       {/* Scrollable Acoustic Guitar Body + 12-Fret Neck */}
       <div className="overflow-x-auto pb-1">
         <div className="min-w-[760px] rounded-xl border border-amber-800/40 bg-gradient-to-r from-amber-950/80 via-amber-900/40 to-stone-900 p-2.5">
-          {/* Fret Number Header */}
+              {/* Fret Number Header */}
           <div className="mb-1 flex items-center">
-            <div className="w-[210px] shrink-0 pl-2 text-[10px] font-semibold tracking-wider text-amber-300/80 uppercase">
-              Soundhole &amp; Pick ({activeChord.symbol})
+            <div className="w-[224px] shrink-0 pl-2 text-[10px] font-semibold tracking-wider text-amber-300/80 uppercase">
+              Genjreng &amp; Petik Senar
             </div>
             <div className="grid flex-1 grid-cols-13 text-center text-[10px] font-bold text-stone-300">
               {FRET_NUMBERS.map((fret) => (
@@ -245,7 +277,7 @@ export function GuitarNeckStage({
                         : 'text-stone-400'
                   }`}
                 >
-                  {fret === 0 ? 'Open' : fret}
+                  {fret === 0 ? 'Lepas' : fret}
                 </div>
               ))}
             </div>
@@ -256,25 +288,25 @@ export function GuitarNeckStage({
             {/* Decorative Acoustic Soundhole Rosette */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-[118px] h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border-[6px] border-amber-500/35 bg-stone-950/90 ring-4 ring-amber-300/20"
+              className="pointer-events-none absolute top-1/2 left-[132px] h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border-[6px] border-amber-500/35 bg-stone-950/90 ring-4 ring-amber-300/20"
             />
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-[118px] h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-400/25"
+              className="pointer-events-none absolute top-1/2 left-[132px] h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-400/25"
             />
 
             {/* Left Strum Controls + Soundhole Pick Column */}
-            <div className="relative z-10 flex w-[210px] shrink-0 items-stretch border-r-4 border-stone-200/80">
+            <div className="relative z-10 flex w-[224px] shrink-0 items-stretch border-r-4 border-stone-200/80">
               {/* Quick Strum/Mute Pads (Left Edge) */}
-              <div className="flex w-16 shrink-0 flex-col justify-between gap-1 border-r border-amber-900/50 bg-stone-950/55 p-1.5">
+              <div className="flex w-20 shrink-0 flex-col justify-between gap-1 border-r border-amber-900/50 bg-stone-950/60 p-1.5">
                 <button
                   type="button"
                   onClick={onStrumDown}
-                  title={`Strum Down (${formatKeyBadge(keyMap.bindings['strum-down'])})`}
+                  title={`Genjreng Turun (${formatKeyBadge(keyMap.bindings['strum-down'])})`}
                   className="flex flex-1 flex-col items-center justify-center rounded-lg border border-amber-500/40 bg-amber-500/20 px-1 py-1 text-[10px] font-bold text-amber-200 hover:bg-amber-500/30"
                 >
                   <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Strum</span>
+                  <span>Genjreng</span>
                   <kbd className="mt-0.5 rounded bg-black/40 px-1 text-[9px] text-amber-300">
                     {formatKeyBadge(keyMap.bindings['strum-down'])}
                   </kbd>
@@ -283,11 +315,11 @@ export function GuitarNeckStage({
                 <button
                   type="button"
                   onClick={onStrumUp}
-                  title={`Strum Up (${formatKeyBadge(keyMap.bindings['strum-up'])})`}
+                  title={`Genjreng Naik (${formatKeyBadge(keyMap.bindings['strum-up'])})`}
                   className="flex flex-1 flex-col items-center justify-center rounded-lg border border-stone-600/70 bg-stone-800/70 px-1 py-1 text-[10px] font-bold text-stone-200 hover:border-amber-400"
                 >
                   <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Up</span>
+                  <span>Naik</span>
                   <kbd className="mt-0.5 rounded bg-black/40 px-1 text-[9px] text-stone-300">
                     {formatKeyBadge(keyMap.bindings['strum-up'])}
                   </kbd>
@@ -296,11 +328,11 @@ export function GuitarNeckStage({
                 <button
                   type="button"
                   onClick={onMute}
-                  title={`Mute (${formatKeyBadge(keyMap.bindings.mute)})`}
+                  title={`Diam / Mute (${formatKeyBadge(keyMap.bindings.mute)})`}
                   className="flex items-center justify-center gap-1 rounded-lg border border-stone-700 bg-stone-900/90 px-1 py-1.5 text-[10px] font-bold text-stone-300 hover:border-rose-400 hover:text-rose-200"
                 >
                   <Square className="h-2.5 w-2.5" aria-hidden="true" />
-                  <span>{formatKeyBadge(keyMap.bindings.mute)}</span>
+                  <span>Diam ({formatKeyBadge(keyMap.bindings.mute)})</span>
                 </button>
               </div>
 
