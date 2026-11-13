@@ -28,7 +28,8 @@ export type PlayPatternStyle =
   | 'arpeggio-down'
   | 'arpeggio-up'
   | 'arpeggio-down-up'
-  | 'fingerpick';
+  | 'fingerpick'
+  | 'custom-string';
 
 export interface ChordNoteInfo {
   stringIndex: number;
@@ -50,6 +51,7 @@ export interface PlayChordOptions {
   direction?: StrumDirection;
   pattern?: PlayPatternStyle;
   strumIntervalMs?: number;
+  customStringOrder?: readonly number[];
 }
 
 export interface PlayStringOptions {
@@ -439,6 +441,7 @@ export function buildPlayPatternSequence(
   notes: readonly ChordNoteInfo[],
   pattern: PlayPatternStyle,
   strumIntervalSeconds?: number,
+  customStringOrder?: readonly number[],
 ): PlayPatternStep[] {
   if (notes.length === 0) {
     return [];
@@ -504,6 +507,32 @@ export function buildPlayPatternSequence(
         gain: idx === 0 ? 0.96 : 0.82,
       }));
     }
+    case 'custom-string': {
+      const step = strumIntervalSeconds ?? 0.125;
+      const noteByString = new Map<number, ChordNoteInfo>();
+      for (const note of notes) {
+        noteByString.set(note.stringIndex, note);
+      }
+
+      const sequenceNotes: ChordNoteInfo[] = [];
+      const order =
+        customStringOrder && customStringOrder.length > 0
+          ? customStringOrder
+          : notes.map((n) => n.stringIndex);
+
+      for (const stringIdx of order) {
+        const matched = noteByString.get(stringIdx);
+        if (matched) {
+          sequenceNotes.push(matched);
+        }
+      }
+
+      return sequenceNotes.map((note, idx) => ({
+        note,
+        delaySeconds: idx * step,
+        gain: idx === 0 ? 0.96 : 0.84,
+      }));
+    }
   }
 }
 
@@ -545,7 +574,12 @@ export async function playChordPreview(
       ? Math.max(0.01, options.strumIntervalMs / 1000)
       : undefined;
 
-  const sequence = buildPlayPatternSequence(notes, pattern, strumIntervalSeconds);
+  const sequence = buildPlayPatternSequence(
+    notes,
+    pattern,
+    strumIntervalSeconds,
+    options?.customStringOrder,
+  );
   const tone = options?.tone ?? getGuitarTonePreference();
   let remoteBuffers: Array<AudioBuffer | null>;
 

@@ -37,14 +37,19 @@ import {
 } from '../../chords/chords.types';
 import { ChordDiagram } from '../../chords/components/ChordDiagram';
 import {
+  DEFAULT_CUSTOM_STRING_MASK,
+  DEFAULT_CUSTOM_STRING_ORDER,
   PLAY_PATTERN_OPTIONS,
   PROGRESSION_PRESETS,
   STRING_1_MELODY_KEYS,
   STRING_2_MELODY_KEYS,
   type ChordProgressionPreset,
+  type CustomChordKeyBinding,
   type PlaygroundKeyMap,
   type RemappableActionId,
+  type StringMask,
 } from '../playground.types';
+import { applyCustomStringMask } from '../playgroundChordUtils';
 import {
   loadPlaygroundKeyMap,
   normalizeKeyboardKey,
@@ -52,6 +57,8 @@ import {
   savePlaygroundKeyMap,
 } from '../playgroundKeymapStorage';
 import { CustomKeyMapPanel } from './CustomKeyMapPanel';
+import { CustomKeyPlayPanel } from './CustomKeyPlayPanel';
+import { CustomStringVariationPanel } from './CustomStringVariationPanel';
 import { GuitarNeckStage } from './GuitarNeckStage';
 
 const MAX_PROGRESSION_SLOTS = 8;
@@ -137,8 +144,19 @@ export function PlaygroundScreen() {
   );
   const [showKeyMapPanel, setShowKeyMapPanel] = useState<boolean>(false);
   const [isCapturingKey, setIsCapturingKey] = useState<boolean>(false);
+  const [isCapturingCustomChordKey, setIsCapturingCustomChordKey] =
+    useState<boolean>(false);
   const [pinFretMode, setPinFretMode] = useState<boolean>(false);
   const [pinnedFrets, setPinnedFrets] = useState<Record<number, number>>({});
+  const [customStringMask, setCustomStringMask] = useState<StringMask>(() => [
+    ...DEFAULT_CUSTOM_STRING_MASK,
+  ]);
+  const [customStringOrder, setCustomStringOrder] = useState<number[]>(() => [
+    ...DEFAULT_CUSTOM_STRING_ORDER,
+  ]);
+  const [activeCustomKeyId, setActiveCustomKeyId] = useState<string | null>(
+    null,
+  );
   const [activePlayedNote, setActivePlayedNote] = useState<{
     stringIndex: number;
     fret: number;
@@ -176,7 +194,7 @@ export function PlaygroundScreen() {
     ];
     for (const [key, fretVal] of Object.entries(pinnedFrets)) {
       const idx = Number(key);
-      if (idx >= 0 && idx <= 5 && fretVal >= 0) {
+      if (idx >= 0 && idx <= 5 && fretVal >= -1 && fretVal <= 12) {
         next[idx] = fretVal;
       }
     }
@@ -245,22 +263,58 @@ export function PlaygroundScreen() {
     (
       frets: readonly [number, number, number, number, number, number],
       chosenPattern: PlayPatternStyle,
+      customOrderOverride?: readonly number[],
     ) => {
+      if (chosenPattern === 'custom-string') {
+        const order = customOrderOverride ?? customStringOrder;
+        for (const strIdx of order) {
+          if (frets[strIdx]! >= 0) {
+            triggerStringVibration(strIdx);
+          }
+        }
+        void playChordPreview(frets, {
+          tone: guitarTone,
+          pattern: chosenPattern,
+          customStringOrder: order,
+        });
+        return;
+      }
+
       triggerFretsVisualPulse(frets);
       void playChordPreview(frets, {
         tone: guitarTone,
         pattern: chosenPattern,
       });
     },
-    [guitarTone, triggerFretsVisualPulse],
+    [
+      customStringOrder,
+      guitarTone,
+      triggerFretsVisualPulse,
+      triggerStringVibration,
+    ],
   );
 
   const playChordWithPattern = useCallback(
     (chord: ChordDefinition, chosenPattern: PlayPatternStyle) => {
+      if (chosenPattern === 'custom-string') {
+        const masked = applyCustomStringMask(chord.frets, customStringMask);
+        playFretsWithPattern(masked, 'custom-string', customStringOrder);
+        return;
+      }
       playFretsWithPattern(chord.frets, chosenPattern);
     },
-    [playFretsWithPattern],
+    [customStringMask, customStringOrder, playFretsWithPattern],
   );
+
+  const handleStrumCustomStrings = useCallback(() => {
+    const masked = applyCustomStringMask(effectiveFrets, customStringMask);
+    playFretsWithPattern(masked, 'strum-down');
+  }, [customStringMask, effectiveFrets, playFretsWithPattern]);
+
+  const handlePickCustomStrings = useCallback(() => {
+    const masked = applyCustomStringMask(effectiveFrets, customStringMask);
+    playFretsWithPattern(masked, 'custom-string', customStringOrder);
+  }, [customStringMask, customStringOrder, effectiveFrets, playFretsWithPattern]);
 
   // Auto-play progression loop
   const activeSlotIndexRef = useRef(safeActiveIndex);
@@ -407,34 +461,115 @@ export function PlaygroundScreen() {
     [effectiveFrets, guitarTone, triggerStringVibration],
   );
 
+  const handleSetStringOverride = useCallback(
+    (stringIndex: number, fret: number | null) => {
+      if (stringIndex < 0 || stringIndex > 5) {
+        return;
+      }
+      setPinnedFrets((prev) => {
+        const next = { ...prev };
+        if (fret === null || fret === activeChord.frets[stringIndex]) {
+          delete next[stringIndex];
+        } else {
+          next[stringIndex] = fret;
+        }
+        return next;
+      });
+      if (fret !== null && fret >= 0) {
+        setActivePlayedNote({
+          stringIndex,
+          fret,
+          noteName: formatStringNote(stringIndex, fret),
+        });
+        triggerStringVibration(stringIndex);
+        void playStringPreview(stringIndex, fret, {
+          tone: guitarTone,
+          polyphonic: true,
+        });
+      }
+    },
+    [activeChord.frets, guitarTone, triggerStringVibration],
+  );
+
   const handlePlayFret = useCallback(
     (stringIndex: number, fret: number) => {
       if (fret < 0 || fret > 12 || stringIndex < 0 || stringIndex > 5) {
         return;
       }
-      setActivePlayedNote({
-        stringIndex,
-        fret,
-        noteName: formatStringNote(stringIndex, fret),
-      });
-      triggerStringVibration(stringIndex);
-      void playStringPreview(stringIndex, fret, {
-        tone: guitarTone,
-        polyphonic: true,
-      });
+      let noteFretToPlay = fret;
       if (pinFretMode) {
+        if (
+          pinnedFrets[stringIndex] === undefined &&
+          activeChord.frets[stringIndex] === fret &&
+          fret > 0
+        ) {
+          noteFretToPlay = 0;
+        }
         setPinnedFrets((prev) => {
           const next = { ...prev };
           if (next[stringIndex] === fret) {
             delete next[stringIndex];
+          } else if (
+            prev[stringIndex] === undefined &&
+            activeChord.frets[stringIndex] === fret &&
+            fret > 0
+          ) {
+            // Release pressed chord fret to Open (0) for chord variation
+            next[stringIndex] = 0;
           } else {
             next[stringIndex] = fret;
           }
           return next;
         });
       }
+      setActivePlayedNote({
+        stringIndex,
+        fret: noteFretToPlay,
+        noteName: formatStringNote(stringIndex, noteFretToPlay),
+      });
+      triggerStringVibration(stringIndex);
+      void playStringPreview(stringIndex, noteFretToPlay, {
+        tone: guitarTone,
+        polyphonic: true,
+      });
     },
-    [guitarTone, pinFretMode, triggerStringVibration],
+    [activeChord.frets, guitarTone, pinFretMode, pinnedFrets, triggerStringVibration],
+  );
+
+  const handleTriggerCustomBinding = useCallback(
+    (binding: CustomChordKeyBinding) => {
+      setIsPlayingLoop(false);
+      setActiveCustomKeyId(binding.id);
+
+      let targetBaseChord = activeChord;
+      if (binding.chordId) {
+        const slotIdx = progressionChords.findIndex(
+          (c) => c.id === binding.chordId,
+        );
+        if (slotIdx >= 0) {
+          setActiveSlotIndex(slotIdx);
+          targetBaseChord = progressionChords[slotIdx]!;
+        }
+      }
+
+      const nextOverrides: Record<number, number> = {};
+      for (let i = 0; i < 6; i++) {
+        if (binding.frets[i] !== targetBaseChord.frets[i]) {
+          nextOverrides[i] = binding.frets[i]!;
+        }
+      }
+      setPinnedFrets(nextOverrides);
+      if (binding.customStringOrder && binding.customStringOrder.length > 0) {
+        setCustomStringOrder([...binding.customStringOrder]);
+      }
+
+      playFretsWithPattern(
+        binding.frets,
+        binding.playMode,
+        binding.customStringOrder,
+      );
+    },
+    [activeChord, playFretsWithPattern, progressionChords],
   );
 
   const handleUpdateKeyMap = (next: PlaygroundKeyMap) => {
@@ -451,6 +586,7 @@ export function PlaygroundScreen() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         isCapturingKey ||
+        isCapturingCustomChordKey ||
         event.ctrlKey ||
         event.metaKey ||
         event.altKey ||
@@ -472,7 +608,15 @@ export function PlaygroundScreen() {
 
       const key = normalizeKeyboardKey(event.key);
 
-      // 1. Custom per-fret bindings
+      // 1. Play by Custom Key (Custom Chord / Variation / Custom String triggers)
+      const customChord = keyMap.customChordBindings.find((b) => b.key === key);
+      if (customChord) {
+        event.preventDefault();
+        handleTriggerCustomBinding(customChord);
+        return;
+      }
+
+      // 2. Custom per-fret bindings
       const customFret = keyMap.customFretBindings.find((b) => b.key === key);
       if (customFret) {
         event.preventDefault();
@@ -480,7 +624,7 @@ export function PlaygroundScreen() {
         return;
       }
 
-      // 2. Pluck active string 6..1
+      // 3. Pluck active string 6..1
       const stringActions: Array<{ id: RemappableActionId; index: number }> = [
         { id: 'string-6', index: 0 },
         { id: 'string-5', index: 1 },
@@ -497,7 +641,7 @@ export function PlaygroundScreen() {
         }
       }
 
-      // 3. Strum / Picking / Mute actions
+      // 4. Strum / Picking / Custom String / Mute actions
       if (keyMap.bindings['strum-down'] === key) {
         event.preventDefault();
         playFretsWithPattern(effectiveFrets, 'strum-down');
@@ -518,6 +662,16 @@ export function PlaygroundScreen() {
         playFretsWithPattern(effectiveFrets, 'fingerpick');
         return;
       }
+      if (keyMap.bindings['strum-custom-string'] === key) {
+        event.preventDefault();
+        handleStrumCustomStrings();
+        return;
+      }
+      if (keyMap.bindings['pick-custom-string'] === key) {
+        event.preventDefault();
+        handlePickCustomStrings();
+        return;
+      }
       if (keyMap.bindings.mute === key) {
         event.preventDefault();
         setIsPlayingLoop(false);
@@ -525,7 +679,7 @@ export function PlaygroundScreen() {
         return;
       }
 
-      // 4. Chord progression slots 1..8
+      // 5. Chord progression slots 1..8
       for (let i = 0; i < 8; i++) {
         const actionId = `chord-${i + 1}` as RemappableActionId;
         if (keyMap.bindings[actionId] === key && i < progressionChords.length) {
@@ -535,8 +689,8 @@ export function PlaygroundScreen() {
         }
       }
 
-      // 5. Direct Fretboard Melody Keys (Q-P = String 1 Frets 0-9, A-; = String 2 Frets 0-9)
-      if (keyMap.enableFretMelodyKeys) {
+      // 6. Direct Fretboard Melody Keys (Q-P = String 1 Frets 0-9, A-; = String 2 Frets 0-9)
+      if (keyMap.enableFretMelodyKeys && !keyMap.playByCustomKeyOnly) {
         const s1Fret = STRING_1_MELODY_KEYS.indexOf(
           key as (typeof STRING_1_MELODY_KEYS)[number],
         );
@@ -561,9 +715,13 @@ export function PlaygroundScreen() {
     };
   }, [
     effectiveFrets,
+    handlePickCustomStrings,
     handlePlayFret,
     handlePluckString,
     handleSelectSlot,
+    handleStrumCustomStrings,
+    handleTriggerCustomBinding,
+    isCapturingCustomChordKey,
     isCapturingKey,
     keyMap,
     playFretsWithPattern,
@@ -686,6 +844,42 @@ export function PlaygroundScreen() {
         vibratingStrings={vibratingStrings}
         activePlayedNote={activePlayedNote}
         keyMap={keyMap}
+      />
+
+      {/* String Pressure Variation (Open/Mute) & Play by Custom String */}
+      <CustomStringVariationPanel
+        activeChord={activeChord}
+        effectiveFrets={effectiveFrets}
+        stringOverrides={pinnedFrets}
+        customStringMask={customStringMask}
+        customStringOrder={customStringOrder}
+        keyMap={keyMap}
+        onSetStringOverride={handleSetStringOverride}
+        onResetOverrides={() => setPinnedFrets({})}
+        onToggleCustomString={(idx) =>
+          setCustomStringMask((prev) => {
+            const next = [...prev] as StringMask;
+            next[idx] = !next[idx];
+            return next;
+          })
+        }
+        onSetCustomStringMask={setCustomStringMask}
+        onSetCustomStringOrder={setCustomStringOrder}
+        onStrumCustomStrings={handleStrumCustomStrings}
+        onPickCustomStrings={handlePickCustomStrings}
+      />
+
+      {/* Play by Custom Key (Bind Chords, Variations & Custom Strings to Keys) */}
+      <CustomKeyPlayPanel
+        activeChord={activeChord}
+        effectiveFrets={effectiveFrets}
+        customStringMask={customStringMask}
+        customStringOrder={customStringOrder}
+        keyMap={keyMap}
+        activeCustomKeyId={activeCustomKeyId}
+        onUpdateKeyMap={handleUpdateKeyMap}
+        onTriggerCustomBinding={handleTriggerCustomBinding}
+        onCapturingChange={setIsCapturingCustomChordKey}
       />
 
       {/* Progression Presets & Progression Builder */}
@@ -997,7 +1191,11 @@ export function PlaygroundScreen() {
                     title={item.description}
                     onClick={() => {
                       setPattern(item.id);
-                      playFretsWithPattern(effectiveFrets, item.id);
+                      if (item.id === 'custom-string') {
+                        handlePickCustomStrings();
+                      } else {
+                        playFretsWithPattern(effectiveFrets, item.id);
+                      }
                     }}
                     className={`min-h-9 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
                       active
@@ -1027,7 +1225,11 @@ export function PlaygroundScreen() {
                     title={item.description}
                     onClick={() => {
                       setPattern(item.id);
-                      playFretsWithPattern(effectiveFrets, item.id);
+                      if (item.id === 'custom-string') {
+                        handlePickCustomStrings();
+                      } else {
+                        playFretsWithPattern(effectiveFrets, item.id);
+                      }
                     }}
                     className={`min-h-9 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
                       active

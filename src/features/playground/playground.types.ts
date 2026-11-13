@@ -54,6 +54,12 @@ export const PLAY_PATTERN_OPTIONS: readonly PlayPatternOption[] = [
     mode: 'petik',
     description: 'Pola petikan akustik klasik bass + senar atas',
   },
+  {
+    id: 'custom-string',
+    label: 'Petik Custom Senar',
+    mode: 'petik',
+    description: 'Mainkan urutan & senar custom yang Anda pilih',
+  },
 ] as const;
 
 export const PROGRESSION_PRESETS: readonly ChordProgressionPreset[] = [
@@ -142,6 +148,8 @@ export type RemappableActionId =
   | 'strum-up'
   | 'arpeggio'
   | 'fingerpick'
+  | 'strum-custom-string'
+  | 'pick-custom-string'
   | 'mute'
   | 'chord-1'
   | 'chord-2'
@@ -159,12 +167,117 @@ export interface CustomFretKeyBinding {
   fret: number;
 }
 
+export interface CustomChordKeyBinding {
+  id: string;
+  key: string;
+  label: string;
+  chordId?: string;
+  frets: [number, number, number, number, number, number];
+  playMode: PlayPatternStyle;
+  customStringOrder?: number[];
+}
+
 export interface PlaygroundKeyMap {
   bindings: Record<RemappableActionId, string>;
   autoStrumOnChordKey: boolean;
   enableFretMelodyKeys: boolean;
+  playByCustomKeyOnly: boolean;
   customFretBindings: CustomFretKeyBinding[];
+  customChordBindings: CustomChordKeyBinding[];
 }
+
+export type StringMask = [
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+  boolean,
+];
+
+export const DEFAULT_CUSTOM_STRING_MASK: StringMask = [
+  true,
+  true,
+  true,
+  true,
+  true,
+  true,
+];
+
+export const DEFAULT_CUSTOM_STRING_ORDER: readonly number[] = [
+  1, 3, 4, 5, 4, 3,
+];
+
+export const CUSTOM_STRING_MASK_PRESETS: ReadonlyArray<{
+  id: string;
+  label: string;
+  mask: StringMask;
+}> = [
+  { id: 'all', label: 'Semua (6–1)', mask: [true, true, true, true, true, true] },
+  {
+    id: 'middle-4',
+    label: '4 Tengah (5–2)',
+    mask: [false, true, true, true, true, false],
+  },
+  {
+    id: 'bass-treble',
+    label: 'Bass + Atas (5,3,2,1)',
+    mask: [false, true, false, true, true, true],
+  },
+  {
+    id: 'treble-3',
+    label: '3 Atas (3,2,1)',
+    mask: [false, false, false, true, true, true],
+  },
+  {
+    id: 'bass-3',
+    label: '3 Bass (6,5,4)',
+    mask: [true, true, true, false, false, false],
+  },
+];
+
+export const CUSTOM_STRING_ORDER_PRESETS: ReadonlyArray<{
+  id: string;
+  label: string;
+  order: readonly number[];
+}> = [
+  { id: '5-3-2-1-2-3', label: '5→3→2→1→2→3', order: [1, 3, 4, 5, 4, 3] },
+  {
+    id: '6-4-3-2-1-2-3-4',
+    label: '6→4→3→2→1→2→3→4',
+    order: [0, 2, 3, 4, 5, 4, 3, 2],
+  },
+  { id: '5-4-3-2', label: '5→4→3→2', order: [1, 2, 3, 4] },
+  { id: '6-3-2-1', label: '6→3→2→1', order: [0, 3, 4, 5] },
+];
+
+export const SAMPLE_VARIATION_CUSTOM_KEYS: readonly CustomChordKeyBinding[] = [
+  {
+    id: 'sample-c-open',
+    key: 'u',
+    label: 'C Asli',
+    chordId: 'c-major',
+    frets: [-1, 3, 2, 0, 1, 0],
+    playMode: 'strum-down',
+  },
+  {
+    id: 'sample-c-no-s2',
+    key: 'i',
+    label: 'C Lepas S2 (Cmaj7)',
+    chordId: 'c-major',
+    frets: [-1, 3, 2, 0, 0, 0],
+    playMode: 'strum-down',
+  },
+  {
+    id: 'sample-c-no-s4',
+    key: 'o',
+    label: 'C Lepas S4 (Petik 5-3-2-1)',
+    chordId: 'c-major',
+    frets: [-1, 3, 0, 0, 1, 0],
+    playMode: 'custom-string',
+    customStringOrder: [1, 3, 4, 5, 4, 3],
+  },
+];
 
 export const STRING_1_MELODY_KEYS = [
   'q',
@@ -204,6 +317,8 @@ export const DEFAULT_PLAYGROUND_KEYMAP: PlaygroundKeyMap = {
     'strum-up': 'ArrowUp',
     arpeggio: '[',
     fingerpick: ']',
+    'strum-custom-string': ',',
+    'pick-custom-string': '.',
     mute: 'm',
     'chord-1': '1',
     'chord-2': '2',
@@ -216,7 +331,9 @@ export const DEFAULT_PLAYGROUND_KEYMAP: PlaygroundKeyMap = {
   },
   autoStrumOnChordKey: true,
   enableFretMelodyKeys: true,
+  playByCustomKeyOnly: false,
   customFretBindings: [],
+  customChordBindings: [],
 };
 
 export const REMAPPABLE_ACTION_META: ReadonlyArray<{
@@ -234,6 +351,8 @@ export const REMAPPABLE_ACTION_META: ReadonlyArray<{
   { id: 'strum-up', label: 'Strum Up ↑', group: 'patterns' },
   { id: 'arpeggio', label: 'Petik Arpeggio', group: 'patterns' },
   { id: 'fingerpick', label: 'Petik Fingerpick', group: 'patterns' },
+  { id: 'strum-custom-string', label: 'Strum Custom Senar', group: 'patterns' },
+  { id: 'pick-custom-string', label: 'Petik Urutan Senar', group: 'patterns' },
   { id: 'mute', label: 'Mute Senar', group: 'patterns' },
   { id: 'chord-1', label: 'Chord Slot 1', group: 'chords' },
   { id: 'chord-2', label: 'Chord Slot 2', group: 'chords' },

@@ -1,3 +1,4 @@
+import type { PlayPatternStyle } from '../../engines/audio/ChordPreviewSynth';
 import {
   safeReadStorage,
   safeRemoveStorage,
@@ -5,6 +6,7 @@ import {
 } from '../../stores/preferencesStorage';
 import {
   DEFAULT_PLAYGROUND_KEYMAP,
+  type CustomChordKeyBinding,
   type CustomFretKeyBinding,
   type PlaygroundKeyMap,
   type RemappableActionId,
@@ -15,6 +17,16 @@ const KEYMAP_STORAGE_KEY = 'stringtune:playground-keymap:v1';
 const VALID_ACTION_IDS = Object.keys(
   DEFAULT_PLAYGROUND_KEYMAP.bindings,
 ) as RemappableActionId[];
+
+const VALID_PLAY_MODES = new Set<PlayPatternStyle>([
+  'strum-down',
+  'strum-up',
+  'arpeggio-down',
+  'arpeggio-up',
+  'arpeggio-down-up',
+  'fingerpick',
+  'custom-string',
+]);
 
 /**
  * Normalizes a KeyboardEvent.key string into a consistent canonical token.
@@ -56,7 +68,9 @@ function cloneDefaultKeyMap(): PlaygroundKeyMap {
     bindings: { ...DEFAULT_PLAYGROUND_KEYMAP.bindings },
     autoStrumOnChordKey: DEFAULT_PLAYGROUND_KEYMAP.autoStrumOnChordKey,
     enableFretMelodyKeys: DEFAULT_PLAYGROUND_KEYMAP.enableFretMelodyKeys,
+    playByCustomKeyOnly: DEFAULT_PLAYGROUND_KEYMAP.playByCustomKeyOnly,
     customFretBindings: [],
+    customChordBindings: [],
   };
 }
 
@@ -112,6 +126,53 @@ export function loadPlaygroundKeyMap(): PlaygroundKeyMap {
       }
     }
 
+    const customChordBindings: CustomChordKeyBinding[] = [];
+    if (Array.isArray(parsed.customChordBindings)) {
+      for (const entry of parsed.customChordBindings) {
+        if (
+          entry &&
+          typeof entry === 'object' &&
+          typeof entry.id === 'string' &&
+          typeof entry.key === 'string' &&
+          entry.key.trim().length > 0 &&
+          typeof entry.label === 'string' &&
+          Array.isArray(entry.frets) &&
+          entry.frets.length === 6 &&
+          entry.frets.every(
+            (f) => Number.isInteger(f) && f >= -1 && f <= 12,
+          ) &&
+          typeof entry.playMode === 'string' &&
+          VALID_PLAY_MODES.has(entry.playMode as PlayPatternStyle)
+        ) {
+          const frets = [
+            entry.frets[0]!,
+            entry.frets[1]!,
+            entry.frets[2]!,
+            entry.frets[3]!,
+            entry.frets[4]!,
+            entry.frets[5]!,
+          ] as [number, number, number, number, number, number];
+          const customStringOrder = Array.isArray(entry.customStringOrder)
+            ? entry.customStringOrder.filter(
+                (s) => Number.isInteger(s) && s >= 0 && s <= 5,
+              )
+            : undefined;
+          customChordBindings.push({
+            id: entry.id,
+            key: normalizeKeyboardKey(entry.key),
+            label: entry.label,
+            chordId: typeof entry.chordId === 'string' ? entry.chordId : undefined,
+            frets,
+            playMode: entry.playMode as PlayPatternStyle,
+            customStringOrder:
+              customStringOrder && customStringOrder.length > 0
+                ? customStringOrder
+                : undefined,
+          });
+        }
+      }
+    }
+
     return {
       bindings,
       autoStrumOnChordKey:
@@ -122,7 +183,12 @@ export function loadPlaygroundKeyMap(): PlaygroundKeyMap {
         typeof parsed.enableFretMelodyKeys === 'boolean'
           ? parsed.enableFretMelodyKeys
           : fallback.enableFretMelodyKeys,
+      playByCustomKeyOnly:
+        typeof parsed.playByCustomKeyOnly === 'boolean'
+          ? parsed.playByCustomKeyOnly
+          : fallback.playByCustomKeyOnly,
       customFretBindings,
+      customChordBindings,
     };
   } catch {
     return fallback;

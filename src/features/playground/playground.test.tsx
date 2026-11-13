@@ -201,4 +201,81 @@ describe('Guitar Playground', () => {
     });
     expect(loadPlaygroundKeyMap().customFretBindings).toHaveLength(1);
   });
+
+  it('supports chord string variations (open/mute), play by custom string, and play by custom key', () => {
+    renderPlayground();
+
+    // Starts on C Major [-1, 3, 2, 0, 1, 0]
+    expect(screen.getByTestId('variation-detected-label')).toHaveTextContent(
+      'C (X-3-2-0-1-0)',
+    );
+
+    // Release Senar 2 (B) from fret 1 to Open (0) -> Cmaj7 variation [-1, 3, 2, 0, 0, 0]
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Lepas Senar 2 jadi Open (0)' }),
+    );
+    expect(screen.getByTestId('variation-detected-label')).toHaveTextContent(
+      'C → Cmaj7 (X-3-2-0-0-0)',
+    );
+    expect(ChordPreviewSynth.playStringPreview).toHaveBeenLastCalledWith(
+      4,
+      0,
+      expect.objectContaining({ polyphonic: true }),
+    );
+
+    // Bind this variation to custom key 'u' (Play by Custom Key)
+    const labelInput = screen.getByLabelText('Label custom key voicing');
+    fireEvent.change(labelInput, { target: { value: 'C Var Lepas S2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Bind ke Custom Key' }));
+    fireEvent.keyDown(window, { key: 'u' });
+
+    const persisted = loadPlaygroundKeyMap();
+    expect(persisted.customChordBindings).toHaveLength(1);
+    expect(persisted.customChordBindings[0]).toMatchObject({
+      key: 'u',
+      label: 'C Var Lepas S2',
+      frets: [-1, 3, 2, 0, 0, 0],
+    });
+
+    // Switch to Slot 2 (G Major) first, then press 'u' to trigger the C variation by Custom Key
+    fireEvent.keyDown(window, { key: '2' });
+    vi.mocked(ChordPreviewSynth.playChordPreview).mockClear();
+    fireEvent.keyDown(window, { key: 'u' });
+    expect(ChordPreviewSynth.playChordPreview).toHaveBeenCalledWith(
+      [-1, 3, 2, 0, 0, 0],
+      expect.objectContaining({ pattern: 'strum-down' }),
+    );
+
+    // Test Play by Custom String: disable String 1 (e), then Strum Custom Senar & Petik Urutan Senar
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Reset ke C Asli' }),
+    );
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Aktifkan Senar 1 (e) untuk Custom String',
+      }),
+    );
+
+    vi.mocked(ChordPreviewSynth.playChordPreview).mockClear();
+    fireEvent.keyDown(window, { key: ',' }); // Strum Custom Senar
+    expect(ChordPreviewSynth.playChordPreview).toHaveBeenCalledWith(
+      [-1, 3, 2, 0, 1, -1],
+      expect.objectContaining({ pattern: 'strum-down' }),
+    );
+
+    fireEvent.keyDown(window, { key: '.' }); // Petik Urutan Senar
+    expect(ChordPreviewSynth.playChordPreview).toHaveBeenLastCalledWith(
+      [-1, 3, 2, 0, 1, -1],
+      expect.objectContaining({
+        pattern: 'custom-string',
+        customStringOrder: [1, 3, 4, 5, 4, 3],
+      }),
+    );
+
+    // Mute Senar 4 for further variation
+    fireEvent.click(screen.getByRole('button', { name: 'Mute Senar 4' }));
+    expect(screen.getByTestId('variation-detected-label')).toHaveTextContent(
+      'X-3-X-0-1-0',
+    );
+  });
 });

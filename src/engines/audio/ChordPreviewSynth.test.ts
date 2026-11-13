@@ -330,5 +330,22 @@ describe('ChordPreviewSynth', () => {
     expect(sources[0]!.stop).toHaveBeenCalledTimes(1);
     expect(sources[1]!.stop).not.toHaveBeenCalled();
   });
+
+  it('builds custom-string sequences in requested string order while skipping muted strings', () => {
+    // C Major with unpressed String 2 (Cmaj7): [-1, 3, 2, 0, 0, 0]
+    const cMaj7Notes = getChordMidiNotes([-1, 3, 2, 0, 0, 0]);
+    // Request order: S6(0 - muted), S5(1), S3(3), S2(4), S1(5), S3(3)
+    const sequence = buildPlayPatternSequence(
+      cMaj7Notes,
+      'custom-string',
+      0.1,
+      [0, 1, 3, 4, 5, 3],
+    );
+
+    expect(sequence.map((s) => s.note.stringIndex)).toEqual([1, 3, 4, 5, 3]);
+    expect(sequence[0]!.delaySeconds).toBeCloseTo(0);
+    expect(sequence[1]!.delaySeconds).toBeCloseTo(0.1);
+    expect(sequence[4]!.delaySeconds).toBeCloseTo(0.4);
+  });
 });
 

@@ -485,7 +485,9 @@ export function GuitarNeckStage({
                               <span
                                 className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-extrabold shadow ${
                                   isPinned
-                                    ? 'bg-emerald-400 text-zinc-950 ring-2 ring-white'
+                                    ? fret === 0
+                                      ? 'border-2 border-emerald-400 bg-stone-900/95 text-emerald-300 ring-2 ring-emerald-400/40'
+                                      : 'bg-emerald-400 text-zinc-950 ring-2 ring-white'
                                     : fret === 0
                                       ? 'border-2 border-amber-300 bg-stone-900/90 text-amber-200'
                                       : row.dotClass
@@ -554,7 +556,11 @@ export function GuitarNeckStage({
               })}
             </div>
 
-            {keyMap.enableFretMelodyKeys ? (
+            {keyMap.playByCustomKeyOnly ? (
+              <div className="text-[10px] font-semibold text-amber-300">
+                Mode: Fokus Play by Custom Key Aktif
+              </div>
+            ) : keyMap.enableFretMelodyKeys ? (
               <div className="text-[10px] text-stone-400">
                 Melodi Fret 0–9: Senar 1 (e) <kbd className="rounded bg-stone-800 px-1 text-stone-200">Q–P</kbd> · Senar 2 (B){' '}
                 <kbd className="rounded bg-stone-800 px-1 text-stone-200">A–;</kbd>
