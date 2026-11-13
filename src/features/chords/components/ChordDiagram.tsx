@@ -1,18 +1,46 @@
 import { useState } from 'react';
+import {
+  playStringPreview,
+  STANDARD_OPEN_MIDI,
+  type GuitarToneType,
+} from '../../../engines/audio/ChordPreviewSynth';
+import { NOTE_NAMES } from '../../../engines/pitch/NoteMapper';
 import { FINGER_NAMES, type ChordDefinition } from '../chords.types';
 
 interface ChordDiagramProps {
   chord: ChordDefinition;
   compact?: boolean;
+  guitarTone?: GuitarToneType;
 }
 
 const STRING_LABELS = ['E', 'A', 'D', 'G', 'B', 'e'] as const;
 const NUM_FRETS = 4;
 
-export function ChordDiagram({ chord, compact = false }: ChordDiagramProps) {
+function formatMidiNote(midi: number): string {
+  const note = NOTE_NAMES[((midi % 12) + 12) % 12]!;
+  const octave = Math.floor(midi / 12) - 1;
+  return `${note}${octave}`;
+}
+
+export function ChordDiagram({
+  chord,
+  compact = false,
+  guitarTone,
+}: ChordDiagramProps) {
   const [selectedStringIdx, setSelectedStringIdx] = useState<number | null>(
     null,
   );
+
+  const handleStringTap = (stringIdx: number, fret: number) => {
+    setSelectedStringIdx((prev) => (prev === stringIdx ? null : stringIdx));
+    if (fret >= 0) {
+      void playStringPreview(
+        stringIdx,
+        fret,
+        guitarTone ? { tone: guitarTone } : undefined,
+      );
+    }
+  };
 
   const width = 180;
   const height = 192;
@@ -37,8 +65,11 @@ export function ChordDiagram({ chord, compact = false }: ChordDiagramProps) {
           const sName = STRING_LABELS[selectedStringIdx]!;
           const sNum = 6 - selectedStringIdx;
           if (fret < 0) return `String ${sNum} (${sName}): Muted`;
-          if (fret === 0) return `String ${sNum} (${sName}): Open`;
-          return `String ${sNum} (${sName}): Fret ${fret} · ${FINGER_NAMES[finger] ?? 'Finger'} (${finger})`;
+          const noteName = formatMidiNote(
+            STANDARD_OPEN_MIDI[selectedStringIdx]! + fret,
+          );
+          if (fret === 0) return `String ${sNum} (${sName}): Open · ${noteName}`;
+          return `String ${sNum} (${sName}): Fret ${fret} (${noteName}) · ${FINGER_NAMES[finger] ?? 'Finger'} (${finger})`;
         })()
       : null;
 
@@ -173,11 +204,7 @@ export function ChordDiagram({ chord, compact = false }: ChordDiagramProps) {
             return (
               <g
                 key={`marker-${stringIdx}`}
-                onClick={() =>
-                  setSelectedStringIdx((prev) =>
-                    prev === stringIdx ? null : stringIdx,
-                  )
-                }
+                onClick={() => handleStringTap(stringIdx, fret)}
                 className="cursor-pointer"
               >
                 <line
@@ -212,11 +239,7 @@ export function ChordDiagram({ chord, compact = false }: ChordDiagramProps) {
                 fill="none"
                 stroke="var(--st-text)"
                 strokeWidth="1.8"
-                onClick={() =>
-                  setSelectedStringIdx((prev) =>
-                    prev === stringIdx ? null : stringIdx,
-                  )
-                }
+                onClick={() => handleStringTap(stringIdx, fret)}
                 className="cursor-pointer"
               />
             );
@@ -234,11 +257,7 @@ export function ChordDiagram({ chord, compact = false }: ChordDiagramProps) {
                 cy={cy}
                 r="11"
                 fill="transparent"
-                onClick={() =>
-                  setSelectedStringIdx((prev) =>
-                    prev === stringIdx ? null : stringIdx,
-                  )
-                }
+                onClick={() => handleStringTap(stringIdx, fret)}
                 className="cursor-pointer"
               />
             );
@@ -247,11 +266,7 @@ export function ChordDiagram({ chord, compact = false }: ChordDiagramProps) {
           return (
             <g
               key={`dot-${stringIdx}`}
-              onClick={() =>
-                setSelectedStringIdx((prev) =>
-                  prev === stringIdx ? null : stringIdx,
-                )
-              }
+              onClick={() => handleStringTap(stringIdx, fret)}
               className="cursor-pointer"
             >
               <circle

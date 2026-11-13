@@ -1,7 +1,10 @@
 import { Star, Volume2 } from 'lucide-react';
 import { Badge } from '../../../components/ui/Badge';
 import { Card } from '../../../components/ui/Card';
-import { playChordPreview } from '../../../engines/audio/ChordPreviewSynth';
+import {
+  playChordPreview,
+  type GuitarToneType,
+} from '../../../engines/audio/ChordPreviewSynth';
 import {
   CHORD_CATEGORY_LABELS,
   type ChordDefinition,
@@ -12,12 +15,14 @@ interface ChordCardProps {
   chord: ChordDefinition;
   isFavorite: boolean;
   onToggleFavorite: (chordId: string) => void;
+  guitarTone?: GuitarToneType;
 }
 
 export function ChordCard({
   chord,
   isFavorite,
   onToggleFavorite,
+  guitarTone,
 }: ChordCardProps) {
   return (
     <Card className="flex flex-col justify-between p-4">
@@ -45,7 +50,12 @@ export function ChordCard({
           <button
             type="button"
             aria-label={`Strum ${chord.name}`}
-            onClick={() => void playChordPreview(chord.frets)}
+            onClick={() =>
+              void playChordPreview(
+                chord.frets,
+                guitarTone ? { tone: guitarTone } : undefined,
+              )
+            }
             className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-(--st-border) bg-(--st-surface-elevated) text-(--st-text-muted) transition-colors hover:border-(--st-border-strong) hover:text-(--st-text)"
           >
             <Volume2 className="h-4 w-4" aria-hidden="true" />
@@ -76,7 +86,7 @@ export function ChordCard({
       </div>
 
       <div className="my-3">
-        <ChordDiagram chord={chord} />
+        <ChordDiagram chord={chord} guitarTone={guitarTone} />
       </div>
 
       <div className="flex items-center justify-between border-t border-(--st-border) pt-2.5 text-xs text-(--st-text-muted)">

@@ -62,6 +62,23 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        runtimeCaching: [
+          {
+            urlPattern:
+              /^https:\/\/(cdn\.jsdelivr\.net|gleitz\.github\.io)\/.*acoustic_guitar_.*\.(mp3|ogg)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'guitar-soundfont-samples',
+              expiration: {
+                maxEntries: 120,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
       },
       devOptions: {
         enabled: false,

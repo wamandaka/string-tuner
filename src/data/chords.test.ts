@@ -1,6 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { CHORDS } from './chords';
 import type { ChordCategory } from '../features/chords/chords.types';
+import { getChordMidiNotes } from '../engines/audio/ChordPreviewSynth';
+
+const PITCH_CLASS_MAP: Record<string, number> = {
+  C: 0,
+  'C#': 1,
+  Db: 1,
+  D: 2,
+  'D#': 3,
+  Eb: 3,
+  E: 4,
+  F: 5,
+  'F#': 6,
+  Gb: 6,
+  G: 7,
+  'G#': 8,
+  Ab: 8,
+  A: 9,
+  'A#': 10,
+  Bb: 10,
+  B: 11,
+};
 
 const REQUIRED_CATEGORIES: readonly ChordCategory[] = [
   'major',
@@ -84,5 +105,46 @@ describe('chords.json dataset validation', () => {
         expect(chord.fingers[toStringIndex]).toBe(finger);
       }
     }
+  });
+
+  it('derives accurate pitch classes for every chord and distinguishes E Major from A Major', () => {
+    for (const chord of chords) {
+      const midiNotes = getChordMidiNotes(chord.frets);
+      const soundedPitchClasses = new Set(
+        midiNotes.map((n) => ((n.midi % 12) + 12) % 12),
+      );
+      const declaredPitchClasses = new Set(
+        chord.notes.map((name) => PITCH_CLASS_MAP[name]),
+      );
+
+      for (const pc of soundedPitchClasses) {
+        expect(declaredPitchClasses.has(pc)).toBe(true);
+      }
+      expect(soundedPitchClasses.has(PITCH_CLASS_MAP[chord.root]!)).toBe(true);
+      expect(soundedPitchClasses.size).toBeGreaterThanOrEqual(3);
+    }
+
+    const eMajor = chords.find((c) => c.id === 'e-major')!;
+    const aMajor = chords.find((c) => c.id === 'a-major')!;
+
+    const eNotes = getChordMidiNotes(eMajor.frets);
+    const aNotes = getChordMidiNotes(aMajor.frets);
+
+    expect(eNotes.map((n) => n.noteName)).toEqual([
+      'E2',
+      'B2',
+      'E3',
+      'Ab3',
+      'B3',
+      'E4',
+    ]);
+    expect(aNotes.map((n) => n.noteName)).toEqual([
+      'A2',
+      'E3',
+      'A3',
+      'Db4',
+      'E4',
+    ]);
+    expect(eNotes[0]!.midi).not.toBe(aNotes[0]!.midi);
   });
 });

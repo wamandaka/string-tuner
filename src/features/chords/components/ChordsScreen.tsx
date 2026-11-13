@@ -1,7 +1,14 @@
-import { useMemo, useState } from 'react';
-import { Search, Star, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Guitar, Search, Star, Volume2, X } from 'lucide-react';
 import { usePreferences } from '../../../app/providers/PreferencesProvider';
+import { useRouter } from '../../../app/router';
 import { CHORDS } from '../../../data/chords';
+import {
+  getGuitarTonePreference,
+  preloadChordSamples,
+  setGuitarTonePreference,
+  type GuitarToneType,
+} from '../../../engines/audio/ChordPreviewSynth';
 import {
   CHORD_CATEGORY_LABELS,
   type ChordCategory,
@@ -22,14 +29,42 @@ const CATEGORY_ORDER: readonly ChordCategory[] = [
 
 type VoicingShapeFilter = 'all' | 'open' | 'barre';
 
+const GUITAR_TONE_OPTIONS: ReadonlyArray<{
+  id: GuitarToneType;
+  label: string;
+}> = [
+  { id: 'steel', label: 'Steel Guitar' },
+  { id: 'nylon', label: 'Nylon Guitar' },
+  { id: 'synth', label: 'Acoustic Synth' },
+];
+
 export function ChordsScreen() {
   const { favoriteChordIds, isFavoriteChord, toggleFavoriteChord } =
     usePreferences();
+  const { navigate } = useRouter();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] =
     useState<ChordFilterCategory>('all');
   const [shapeFilter, setShapeFilter] = useState<VoicingShapeFilter>('all');
+  const [guitarTone, setGuitarTone] = useState<GuitarToneType>(() =>
+    getGuitarTonePreference(),
+  );
+
+  useEffect(() => {
+    if (guitarTone === 'synth') {
+      return;
+    }
+    void preloadChordSamples(
+      CHORDS.slice(0, 12).map((chord) => chord.frets),
+      guitarTone,
+    );
+  }, [guitarTone]);
+
+  const handleChangeGuitarTone = (tone: GuitarToneType) => {
+    setGuitarTone(tone);
+    setGuitarTonePreference(tone);
+  };
 
   const filteredChords = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -85,26 +120,63 @@ export function ChordsScreen() {
           </p>
         </div>
 
-        <div
-          role="group"
-          aria-label="Voicing shape filter"
-          className="inline-flex rounded-xl border border-(--st-border) bg-(--st-surface) p-1"
-        >
-          {(['all', 'open', 'barre'] as const).map((shape) => (
-            <button
-              key={shape}
-              type="button"
-              aria-pressed={shapeFilter === shape}
-              onClick={() => setShapeFilter(shape)}
-              className={`min-h-8 rounded-lg px-2.5 py-1 text-xs font-semibold capitalize transition-colors ${
-                shapeFilter === shape
-                  ? 'bg-(--st-accent) text-(--st-accent-text)'
-                  : 'text-(--st-text-muted) hover:text-(--st-text)'
-              }`}
-            >
-              {shape}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate('playground')}
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-(--st-accent) px-3 py-1.5 text-xs font-semibold text-(--st-accent-text) transition-opacity hover:opacity-95"
+          >
+            <Guitar className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Open Playground</span>
+          </button>
+
+          <div
+            role="group"
+            aria-label="Guitar sound"
+            className="inline-flex flex-wrap items-center gap-0.5 rounded-xl border border-(--st-border) bg-(--st-surface) p-1"
+          >
+            <Volume2
+              className="mx-1.5 h-3.5 w-3.5 shrink-0 text-(--st-text-muted)"
+              aria-hidden="true"
+            />
+            {GUITAR_TONE_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                aria-pressed={guitarTone === option.id}
+                onClick={() => handleChangeGuitarTone(option.id)}
+                className={`min-h-8 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  guitarTone === option.id
+                    ? 'bg-(--st-accent) text-(--st-accent-text)'
+                    : 'text-(--st-text-muted) hover:text-(--st-text)'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <div
+            role="group"
+            aria-label="Voicing shape filter"
+            className="inline-flex rounded-xl border border-(--st-border) bg-(--st-surface) p-1"
+          >
+            {(['all', 'open', 'barre'] as const).map((shape) => (
+              <button
+                key={shape}
+                type="button"
+                aria-pressed={shapeFilter === shape}
+                onClick={() => setShapeFilter(shape)}
+                className={`min-h-8 rounded-lg px-2.5 py-1 text-xs font-semibold capitalize transition-colors ${
+                  shapeFilter === shape
+                    ? 'bg-(--st-accent) text-(--st-accent-text)'
+                    : 'text-(--st-text-muted) hover:text-(--st-text)'
+                }`}
+              >
+                {shape}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -224,6 +296,7 @@ export function ChordsScreen() {
               chord={chord}
               isFavorite={isFavoriteChord(chord.id)}
               onToggleFavorite={toggleFavoriteChord}
+              guitarTone={guitarTone}
             />
           ))}
         </div>
